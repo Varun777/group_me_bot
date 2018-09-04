@@ -1,3 +1,5 @@
+Shoutout to dtcarls on github for creating the original version of the chatbot.
+
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 # Interactive GroupMe Chat Bot
