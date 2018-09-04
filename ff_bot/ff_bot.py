@@ -23,10 +23,10 @@ class GroupMeBot(object):
     def init_listener(self):
         # start handshake with server
         client_id = self.handshake()
-        # subscribe to user channel
-        self.subscribe_user(client_id)
         # subscribe to group channel
         self.subscribe_group(client_id)
+        # subscribe to user channel
+        self.subscribe_user(client_id)
         # long poll for stuff
         self.start_poll(client_id)
         return
@@ -80,7 +80,7 @@ class GroupMeBot(object):
         headers = {'content-type': 'application/json'}
 
         print("[" + get_time() + "] Begin polling.")
-        self.send_message("[" + get_time() + "] I'm alive. type \"@" + BOT_NAME + " help\" to see what i can do.")
+        self.send_message("I'm alive! type \"@" + BOT_NAME + " help\" to see what i can do.")
         loop = True
         while loop:
             try:
@@ -111,12 +111,12 @@ class GroupMeBot(object):
 # handle different response scenarios here.
 # currently supports:
 #    1) response = "@[BOT_NAME]", print greeting
-#    2) response = "wonder", print arrested development reference
+#    2) response = "@[BOT_NAME] help", provide list of commands
+#    3) response = "@[BOT_NAME] salt [USER]", provide random insult to [USER]
+#    4) response = "wonder", print arrested development reference
 #
 # future scenarios:
 #    ⁃ response contains “hard”, print “thats what she said”
-#    ⁃ response = "@[BOT_NAME] help", provide list of commands
-#    - response = "@[BOT_NAME] [COMMAND]", perform command
 def handle_response(bot, json_data):
     # get the text from response. if exception, simply return
     try:
@@ -125,6 +125,8 @@ def handle_response(bot, json_data):
             handle_bot_name(bot)
         elif text == "@" + BOT_NAME + " help":
             handle_bot_help(bot)
+        elif str.startswith(text, "@" + BOT_NAME + " salt "):
+            handle_bot_salt(bot, str.split(text, "salt ", 1)[1])
         # todo: change this to check if text includes "wonder"
         elif text == "wonder":
             handle_wonder(bot)
@@ -140,7 +142,19 @@ def handle_bot_name(bot):
 # handle when response = "@[BOT_NAME] help"
 def handle_bot_help(bot):
     bot.send_message("commands:\n" +
-                     "@" + BOT_NAME + " help -- show list of commands\n")
+                     "@" + BOT_NAME + " help -- show list of commands\n" +
+                     "@" + BOT_NAME + " salt [USER] -- make a random salty comment towards [USER]\n\n"
+                     "alerts/breaking news:\n" +
+                     "trade alerts (coming soon)\n" +
+                     "broken records (coming soon)\n\n" +
+                     "easter eggs:\n" +
+                     "¯\_(ツ)_/¯\n\n")
+
+
+# handle when response = "@[BOT_NAME] salt [USER]"
+def handle_bot_salt(bot, user):
+    r = requests.get("https://insult.mattbas.org//api/en/insult.json?who=" + user)
+    bot.send_message(r.json()["insult"])
 
 
 # handle when response = "wonder"
