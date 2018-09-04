@@ -1,4 +1,4 @@
-Shoutout to dtcarls on github for creating the original version of the chatbot.
+Shoutout to dtcarls on github for creating the original version of the chatbot (https://github.com/dtcarls/ff_bot).
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
