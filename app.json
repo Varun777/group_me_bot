@@ -1,6 +1,6 @@
 {
-  "name": "Fantasy Football Chat Bot",
-  "description": "ESPN FF GroupMe Chat Bot.",
+  "name": "GroupMe Chat Bot",
+  "description": "an interactive chat bot for GroupMe",
   "keywords": [
     "fantasy football",
     "espn",
@@ -8,40 +8,23 @@
     "chat bot",
     "ff"
   ],
-  "website": "https://github.com/dtcarls/ff_bot/",
-  "repository": "https://github.com/dtcarls/ff_bot/",
+  "website": "https://github.com/nickcollins24/group_me_bot/",
+  "repository": "https://github.com/nickcollins24/group_me_bot/",
   "env": {
     "BOT_ID": {
-      "description": "GroupMe Bot ID",
-      "value": "1"
+      "description": "GroupMe Bot ID"
     },
-    "WEBHOOK_URL": {
-      "description": "Slack Webhook URL",
-      "value": "1"
+    "BOT_NAME": {
+      "description": "GroupMe Bot Name"
     },
-    "LEAGUE_ID": {
-      "description": "ESPN League ID",
-      "value": "1"
+    "USER_ID": {
+      "description": "GroupMe User ID"
     },
-    "LEAGUE_YEAR": {
-      "description": "ESPN League Year",
-      "value": "2018"
+    "GROUP_ID": {
+      "description": "GroupMe Group ID"
     },
-    "TIMEZONE": {
-      "description": "League timezone for sending messages",
-      "value": "America/New_York"
-    },
-    "START_DATE": {
-      "description": "Season Start Date",
-      "value": "2018-09-05"
-    },
-    "END_DATE": {
-      "description": "Season End Date",
-      "value": "2018-12-26"
-    },
-    "INIT_MSG": {
-      "description": "Bot Init Message",
-      "value": "Hi"
+    "ACCESS_TOKEN": {
+      "description": "Access Token for GroupMe API"
     }
   }
 }
