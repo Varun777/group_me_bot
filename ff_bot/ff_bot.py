@@ -79,10 +79,10 @@ class GroupMeBot(object):
         }
         headers = {'content-type': 'application/json'}
 
+        print("[" + get_time() + "] Begin polling.")
         self.send_message("[" + get_time() + "] I'm alive.")
         loop = True
         while loop:
-            print("[" + get_time() + "] Looping poll request.")
             try:
                 r = requests.post("https://push.groupme.com/faye", data=json.dumps(template), headers=headers)
                 try:
@@ -93,9 +93,6 @@ class GroupMeBot(object):
 
             except requests.exceptions.ConnectionError:
                 print("[" + get_time() + "] ConnectionError occurred. Restart polling.")
-                # todo: remove send_message call
-                self.send_message("[" + get_time() + "] ConnectionError occurred. Restart polling.")
-                # self.start_poll(client_id)
             except Exception as ex:
                 print("[" + get_time() + "] Something went wrong. " + ex.__repr__())
                 self.send_message("[" + get_time() + "] Something went wrong. I'm ded.")
