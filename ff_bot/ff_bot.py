@@ -80,7 +80,7 @@ class GroupMeBot(object):
         headers = {'content-type': 'application/json'}
 
         print("[" + get_time() + "] Begin polling.")
-        self.send_message("[" + get_time() + "] I'm alive.")
+        self.send_message("[" + get_time() + "] I'm alive. type \"@" + BOT_NAME + " help\" to see what i can do.")
         loop = True
         while loop:
             try:
