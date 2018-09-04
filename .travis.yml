@@ -17,4 +17,4 @@ script:
   - docker run test_build python3 /usr/src/ff_bot/setup.py test
 
 env:
-  - BOT_ID=916ccfd76a7fda25c74d09e1d5 LEAGUE_ID=164483
+  - BOT_ID=0 LEAGUE_ID=0

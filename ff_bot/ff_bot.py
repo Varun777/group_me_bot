@@ -85,10 +85,14 @@ class GroupMeBot(object):
                 r = requests.post("https://push.groupme.com/faye", data=json.dumps(template), headers=headers)
             except ConnectionError:
                 print("ohnos ConnectionError")
+                self.send_message("Restarting after ConnectionError")
                 self.start_poll(client_id)
             except ConnectionAbortedError:
                 print("ohnos ConnectionAbortedError")
+                self.send_message("Restarting after ConnectionAbortedERROR")
                 self.start_poll(client_id)
+            except Exception as ex:
+                print("ohnos ITS SOMETHING ELSE: " + ex)
             handle_response(self, r.json()[1]["data"])
 
     # Send message from bot to chat room
