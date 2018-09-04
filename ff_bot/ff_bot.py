@@ -92,9 +92,9 @@ class GroupMeBot(object):
                     print("[" + get_time() + "] Unable to pull data from request body: " + r.json())
 
             except requests.exceptions.ConnectionError:
-                print("[" + get_time() + "] ConnectionError occurred. Restart polling")
+                print("[" + get_time() + "] ConnectionError occurred. Restart polling.")
                 # todo: remove send_message call
-                self.send_message("[" + get_time() + "] ConnectionError occurred. Restart polling")
+                self.send_message("[" + get_time() + "] ConnectionError occurred. Restart polling.")
                 # self.start_poll(client_id)
             except Exception as ex:
                 print("[" + get_time() + "] Something went wrong. " + ex.__repr__())
