@@ -79,21 +79,27 @@ class GroupMeBot(object):
         }
         headers = {'content-type': 'application/json'}
 
+        self.send_message("[" + get_time() + "] I'm alive.")
         loop = True
         while loop:
+            print("[" + get_time() + "] Looping poll request.")
             try:
                 r = requests.post("https://push.groupme.com/faye", data=json.dumps(template), headers=headers)
-            except ConnectionError:
-                print("ohnos ConnectionError")
-                self.send_message("Restarting after ConnectionError")
-                self.start_poll(client_id)
-            except ConnectionAbortedError:
-                print("ohnos ConnectionAbortedError")
-                self.send_message("Restarting after ConnectionAbortedERROR")
-                self.start_poll(client_id)
+                try:
+                    handle_response(self, r.json()[1]["data"])
+                # handle response with no "data" field
+                except:
+                    print("[" + get_time() + "] Unable to pull data from request body: " + r.json())
+
+            except requests.exceptions.ConnectionError:
+                print("[" + get_time() + "] ConnectionError occurred. Restart polling")
+                # todo: remove send_message call
+                self.send_message("[" + get_time() + "] ConnectionError occurred. Restart polling")
+                # self.start_poll(client_id)
             except Exception as ex:
-                print("ohnos ITS SOMETHING ELSE: " + ex)
-            handle_response(self, r.json()[1]["data"])
+                print("[" + get_time() + "] Something went wrong. " + ex.__repr__())
+                self.send_message("[" + get_time() + "] Something went wrong. I'm ded.")
+                return
 
     # Send message from bot to chat room
     def send_message(self, text):
@@ -120,6 +126,9 @@ def handle_response(bot, json_data):
         text = json_data["subject"]["text"]
         if text == "@" + BOT_NAME:
             handle_bot_name(bot)
+        elif text == "@" + BOT_NAME + " help":
+            handle_bot_help(bot)
+        # todo: change this to check if text includes "wonder"
         elif text == "wonder":
             handle_wonder(bot)
     except:
@@ -128,14 +137,23 @@ def handle_response(bot, json_data):
 
 # handle when response = "@[BOT_NAME]"
 def handle_bot_name(bot):
-    bot.send_message("whatup losers. im @" + BOT_NAME + ". " +
-                     "pretty soon ill be able to handle commands straight from here. " +
-                     "ill mostly just be hangin around here to throw salt at people. peace.")
+    bot.send_message("you rang? type \"@" + BOT_NAME + " help\" to see what i can do.")
+
+
+# handle when response = "@[BOT_NAME] help"
+def handle_bot_help(bot):
+    bot.send_message("commands:\n" +
+                     "@" + BOT_NAME + " help -- show list of commands\n")
 
 
 # handle when response = "wonder"
 def handle_wonder(bot):
     bot.send_message("did somebody say wonder?!")
+
+
+# helper function to get current time as HH:MM:SS UTC
+def get_time():
+    return time.strftime("%T %Z", time.localtime(time.time()))
 
 
 # main class
