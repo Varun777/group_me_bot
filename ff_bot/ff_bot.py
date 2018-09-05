@@ -89,13 +89,13 @@ class GroupMeBot(object):
                     handle_response(self, r.json()[1]["data"])
                 # handle response with no "data" field
                 except:
-                    print("[" + get_time() + "] Unable to pull data from request body: " + r.json())
-
+                    print("[" + get_time() + "] Unable to pull data from request body: \n" + list.__repr__(r.json()) +
+                          "\nRestart polling.")
             except requests.exceptions.ConnectionError:
                 print("[" + get_time() + "] ConnectionError occurred. Restart polling.")
             except Exception as ex:
                 print("[" + get_time() + "] Something went wrong. " + ex.__repr__())
-                self.send_message("[" + get_time() + "] Something went wrong. I'm ded.")
+                self.send_message("Something went wrong. I'm ded.")
                 return
 
     # Send message from bot to chat room
@@ -113,13 +113,17 @@ class GroupMeBot(object):
 #    1) response = "@[BOT_NAME]", print greeting
 #    2) response = "@[BOT_NAME] help", provide list of commands
 #    3) response = "@[BOT_NAME] salt [USER]", provide random insult to [USER]
-#    4) response = "wonder", print arrested development reference
+#    4) response contains "wonder", print arrested development reference
 #
 # future scenarios:
 #    ⁃ response contains “hard”, print “thats what she said”
 def handle_response(bot, json_data):
     # get the text from response. if exception, simply return
     try:
+        # ignore response if it comes from the bot
+        if json_data["subject"]["name"] == BOT_NAME:
+            return
+
         text = json_data["subject"]["text"]
         if text == "@" + BOT_NAME:
             handle_bot_name(bot)
@@ -127,9 +131,8 @@ def handle_response(bot, json_data):
             handle_bot_help(bot)
         elif str.startswith(text, "@" + BOT_NAME + " salt "):
             handle_bot_salt(bot, str.split(text, "salt ", 1)[1])
-        # todo: change this to check if text includes "wonder"
-        elif text == "wonder":
-            handle_wonder(bot)
+        elif str.__contains__(text, "wonder"):
+            handle_bot_wonder(bot)
     except:
         return
 
@@ -158,7 +161,7 @@ def handle_bot_salt(bot, user):
 
 
 # handle when response = "wonder"
-def handle_wonder(bot):
+def handle_bot_wonder(bot):
     bot.send_message("did somebody say wonder?!")
 
 
