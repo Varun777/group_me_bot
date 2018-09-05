@@ -2,6 +2,7 @@ import requests
 import time
 import json
 import os
+import random
 
 # environment vars
 BOT_ID = os.environ["BOT_ID"]
@@ -29,7 +30,6 @@ class GroupMeBot(object):
         self.subscribe_user(client_id)
         # long poll for stuff
         self.start_poll(client_id)
-        return
 
     # handshake for GroupMe listener
     def handshake(self):
@@ -91,6 +91,7 @@ class GroupMeBot(object):
                 except:
                     print("[" + get_time() + "] Unable to pull data from request body: \n" + list.__repr__(r.json()) +
                           "\nRestart polling.")
+                    self.init_listener()
             except requests.exceptions.ConnectionError:
                 print("[" + get_time() + "] ConnectionError occurred. Restart polling.")
             except Exception as ex:
@@ -130,7 +131,7 @@ def handle_response(bot, json_data):
         elif text == "@" + BOT_NAME + " help":
             handle_bot_help(bot)
         elif str.startswith(text, "@" + BOT_NAME + " salt "):
-            handle_bot_salt(bot, str.split(text, "salt ", 1)[1])
+            handle_bot_salt(bot, json_data["subject"]["name"], str.split(text, "salt ", 1)[1])
         elif str.__contains__(text, "wonder"):
             handle_bot_wonder(bot)
     except:
@@ -155,9 +156,13 @@ def handle_bot_help(bot):
 
 
 # handle when response = "@[BOT_NAME] salt [USER]"
-def handle_bot_salt(bot, user):
-    r = requests.get("https://insult.mattbas.org//api/en/insult.json?who=" + user)
-    bot.send_message(r.json()["insult"])
+def handle_bot_salt(bot, user_from, user_to):
+    # easter egg: do this 20% of the time..
+    if random.randint(1, 5) == 1:
+        bot.send_message("how dare you, " + user_from + ", she's a nice lady!")
+    else:
+        r = requests.get("https://insult.mattbas.org/api/en/insult.json?who=" + user_to)
+        bot.send_message(r.json()["insult"])
 
 
 # handle when response = "wonder"
