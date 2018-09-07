@@ -25,6 +25,12 @@
     },
     "ACCESS_TOKEN": {
       "description": "Access Token for GroupMe API"
+    },
+    "LEAGUE_ID": {
+      "description": "ESPN Fantasy Football League ID"
+    },
+    "LEAGUE_YEAR": {
+      "description": "ESPN Fantasy Football League Year"
     }
   }
 }
