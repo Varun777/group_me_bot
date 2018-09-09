@@ -4,6 +4,8 @@ import json
 import os
 import random
 import sys
+import websockets
+import asyncio
 
 # environment vars
 BOT_ID = os.environ["BOT_ID"]
@@ -30,8 +32,8 @@ class GroupMeBot(object):
         self.subscribe_group(client_id)
         # subscribe to user channel
         self.subscribe_user(client_id)
-        # long poll for stuff
-        self.start_poll(client_id)
+        # open websocket connection to listen for messages
+        asyncio.get_event_loop().run_until_complete(self.open_websocket(client_id))
 
     # handshake for GroupMe listener
     def handshake(self):
@@ -39,7 +41,7 @@ class GroupMeBot(object):
         template = {
             "channel": "/meta/handshake",
             "version": "1.0",
-            "supportedConnectionTypes": ["long-polling"],
+            "supportedConnectionTypes": ["websocket"],
             "id": "1"}
         headers = {'content-type': 'application/json'}
         r = requests.post("https://push.groupme.com/faye", data=json.dumps(template), headers=headers)
@@ -71,30 +73,31 @@ class GroupMeBot(object):
         headers = {'content-type': 'application/json'}
         requests.post("https://push.groupme.com/faye", data=json.dumps(template), headers=headers)
 
-    # begin polling
-    def start_poll(self, client_id):
+    # open websocket connection to listen for group messages
+    async def open_websocket(self, client_id):
         template = {
             "channel": "/meta/connect",
             "clientId": client_id,
-            "connectionType": "long-polling",
+            "connectionType": "websocket",
             "id": "4"
         }
-        headers = {'content-type': 'application/json'}
 
-        loop = True
-        while loop:
+        while True:
             try:
-                r = requests.post("https://push.groupme.com/faye", data=json.dumps(template), headers=headers)
-                user_from = r.json()[1]["data"]["subject"]["name"]
-                group_id = r.json()[1]["data"]["subject"]["group_id"]
-                text = r.json()[1]["data"]["subject"]["text"]
+                async with websockets.connect("wss://push.groupme.com/faye") as ws:
+                    await ws.send(json.dumps(template))
+                    r = await ws.recv()
 
-                handle_response(self, user_from, group_id, text)
-            except requests.exceptions.ConnectionError:
-                print("[" + get_time() + "] ConnectionError occurred. Restart polling.")
+                    if len(json.loads(r)) > 0:
+                        user_from = json.loads(r)[0]["data"]["subject"]["name"]
+                        group_id = json.loads(r)[0]["data"]["subject"]["group_id"]
+                        text = json.loads(r)[0]["data"]["subject"]["text"]
+
+                        handle_response(self, user_from, group_id, text)
+            except websockets.exceptions.ConnectionClosed:
+                print("[" + get_time() + "] Connection closed. Continue loop.")
             except Exception as ex:
-                print("[" + get_time() + "] Exception in start_poll: " + ex.__repr__() + "\n" +
-                      json.dumps(r.json()))
+                print("[" + get_time() + "] Exception in open_websocket: " + ex.__repr__() + "\n" + r)
 
     # Send message from bot to chat room
     def send_message(self, text):
