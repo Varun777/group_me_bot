@@ -122,16 +122,20 @@ class GroupMeBot(object):
 def handle_response(bot, user_from, group_id, text):
     # get the text from response. if exception, simply return
     try:
+        at_bot = "@" + BOT_NAME
+
         # ignore response if it comes from the bot, or from a different group
         if str.lower(user_from).__eq__(str.lower(BOT_NAME)) or group_id != GROUP_ID:
             return
-        if text == "@" + BOT_NAME:
+        if text == at_bot:
             handle_bot_name(bot)
-        elif text == "@" + BOT_NAME + " help":
+        elif text == at_bot + " help":
             handle_bot_help(bot)
-        elif str.startswith(text, "@" + BOT_NAME + " salt "):
+        elif text == at_bot + " show scores":
+            handle_bot_scores(bot)
+        elif str.startswith(text, at_bot + " salt "):
             handle_bot_salt(bot, user_from, str.split(text, "salt ", 1)[1])
-        elif text == "@" + BOT_NAME + " die":
+        elif text == at_bot + " die":
             kill_bot(bot)
         elif str.__contains__(str.lower(text), "wonder"):
             handle_bot_wonder(bot)
@@ -141,23 +145,25 @@ def handle_response(bot, user_from, group_id, text):
 
 
 # handle when response = "@[BOT_NAME]"
+# display greeting
 def handle_bot_name(bot):
     bot.send_message("you rang? type \"@" + BOT_NAME + " help\" to see what i can do.")
 
 
 # handle when response = "@[BOT_NAME] help"
+# display command list
 def handle_bot_help(bot):
     bot.send_message("commands:\n" +
                      "@" + BOT_NAME + " help -- show list of commands\n" +
-                     "@" + BOT_NAME + " salt [USER] -- make a random salty comment towards [USER]\n\n"
+                     "@" + BOT_NAME + " show scores -- show this weeks scores\n"
+                     "@" + BOT_NAME + " salt [USER] -- throw salt at [USER]\n\n"
                      "alerts/breaking news:\n" +
                      "trade alerts (coming soon)\n" +
-                     "broken records (coming soon)\n\n" +
-                     "easter eggs:\n" +
-                     "¯\_(ツ)_/¯\n\n")
+                     "broken records (coming soon)\n")
 
 
 # handle when response = "@[BOT_NAME] salt [USER]"
+# display random salty comment towards user_to
 def handle_bot_salt(bot, user_from, user_to):
     number = random.randint(1, 100)
     # easter egg: do this 10% of the time..
@@ -175,8 +181,32 @@ def handle_bot_salt(bot, user_from, user_to):
 
 
 # handle when response = "wonder"
+# display arrested development reference
 def handle_bot_wonder(bot):
     bot.send_message("did somebody say wonder?!")
+
+
+# handle when response = "@[BOT_NAME] show scores"
+# display scores for current week
+def handle_bot_scores(bot):
+    matchups = espn.get_current_scores()
+    scores = ""
+
+    for m in matchups:
+        if m.home_score >= m.away_score:
+            first_team_name = m.home_team.team_name
+            first_team_score = m.home_score
+            second_team_name = m.away_team.team_name
+            second_team_score = m.away_score
+        else:
+            first_team_name = m.away_team.team_name
+            first_team_score = m.away_score
+            second_team_name = m.home_team.team_name
+            second_team_score = m.home_score
+
+        scores += '%s (%.2f) - (%.2f) %s\n' % (first_team_name, first_team_score, second_team_score, second_team_name)
+
+    bot.send_message(scores)
 
 
 # kill program

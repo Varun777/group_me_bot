@@ -6,6 +6,6 @@ LEAGUE_YEAR = os.environ["LEAGUE_YEAR"]
 league = League(LEAGUE_ID, LEAGUE_YEAR)
 
 
-def test():
-    # gets current week's Matchups
-    return league.league_id
+# gets current week's matchups
+def get_current_scores():
+    return league.scoreboard()
