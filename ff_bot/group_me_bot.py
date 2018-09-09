@@ -6,6 +6,7 @@ import random
 import sys
 import websockets
 import asyncio
+import ff_bot.espn_ff_api as espn
 
 # environment vars
 BOT_ID = os.environ["BOT_ID"]
@@ -174,11 +175,6 @@ def handle_bot_salt(bot, user_from, user_to):
 # handle when response = "wonder"
 def handle_bot_wonder(bot):
     bot.send_message("did somebody say wonder?!")
-
-
-# handle when response = "@[BOT_NAME] test
-# def handle_bot_test(bot):
-#     bot.send_message(ff_api.test())
 
 
 # kill program
