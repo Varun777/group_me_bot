@@ -89,16 +89,18 @@ class GroupMeBot(object):
                     await ws.send(json.dumps(template))
                     r = await ws.recv()
 
-                    if len(json.loads(r)) > 0:
+                    if len(json.loads(r)) > 0 and is_valid_response(json.loads(r)[0]):
                         user_from = json.loads(r)[0]["data"]["subject"]["name"]
                         group_id = json.loads(r)[0]["data"]["subject"]["group_id"]
                         text = json.loads(r)[0]["data"]["subject"]["text"]
 
                         handle_response(self, user_from, group_id, text)
             except websockets.exceptions.ConnectionClosed:
-                print("[" + get_time() + "] Connection closed. Continue loop.")
+                print("[" + get_time() + "] ConnectionClosed exception. Continue loop.")
+            except ConnectionResetError:
+                print("[" + get_time() + "] ConnectionResetError error. Continue loop.")
             except Exception as ex:
-                print("[" + get_time() + "] Exception in open_websocket: " + ex.__repr__() + "\n" + r)
+                print("[" + get_time() + "] " + ex.__repr__() + " exception. Continue loop.")
 
     # Send message from bot to chat room
     def send_message(self, text):
@@ -181,6 +183,15 @@ def handle_bot_wonder(bot):
 def kill_bot(bot):
     bot.send_message("k bye.")
     sys.exit(0)
+
+
+# checks that the provided response has all required fields
+def is_valid_response(response):
+    return "data" in response and \
+           "subject" in response["data"] and \
+           "name" in response["data"]["subject"] and \
+           "group_id" in response["data"]["subject"] and \
+           "text" in response["data"]["subject"]
 
 
 # helper function to get current time as HH:MM:SS UTC
