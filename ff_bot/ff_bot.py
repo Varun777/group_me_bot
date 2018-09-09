@@ -81,26 +81,20 @@ class GroupMeBot(object):
         }
         headers = {'content-type': 'application/json'}
 
-        self.send_message("I'm alive! type \"@" + BOT_NAME + " help\" to see what i can do.")
         loop = True
         while loop:
             try:
                 r = requests.post("https://push.groupme.com/faye", data=json.dumps(template), headers=headers)
-                try:
-                    handle_response(self, r.json()[1]["data"])
-                # handle response with no "data" field
-                except Exception as ex:
-                    self.send_message(ex.__repr__())
-                    print("[" + get_time() + "] Unable to pull data from request body: \n" + list.__repr__(r.json()) +
-                          "\n" + ex.__repr__() +
-                          "\nRestart polling.")
-                    self.init_listener()
+                user_from = r.json()[1]["data"]["subject"]["name"]
+                group_id = r.json()[1]["data"]["subject"]["group_id"]
+                text = r.json()[1]["data"]["subject"]["text"]
+
+                handle_response(self, user_from, group_id, text)
             except requests.exceptions.ConnectionError:
                 print("[" + get_time() + "] ConnectionError occurred. Restart polling.")
             except Exception as ex:
-                print("[" + get_time() + "] Something went wrong. " + ex.__repr__())
-                self.send_message("Something went wrong. I'm ded.")
-                return
+                print("[" + get_time() + "] Exception in start_poll: " + ex.__repr__() + "\n" +
+                      json.dumps(r.json()))
 
     # Send message from bot to chat room
     def send_message(self, text):
@@ -119,21 +113,18 @@ class GroupMeBot(object):
 #    3) response = "@[BOT_NAME] salt [USER]", provide random insult to [USER]
 #    4) response contains "wonder", print arrested development reference
 #    5) response = "@[BOT_NAME] die", kill program
-def handle_response(bot, json_data):
+def handle_response(bot, user_from, group_id, text):
     # get the text from response. if exception, simply return
     try:
-        user = json_data["subject"]["name"]
-        text = json_data["subject"]["text"]
-
-        # ignore response if it comes from the bot
-        if str.lower(user).__eq__(str.lower(BOT_NAME)):
+        # ignore response if it comes from the bot, or from a different group
+        if str.lower(user_from).__eq__(str.lower(BOT_NAME)) or group_id != GROUP_ID:
             return
         if text == "@" + BOT_NAME:
             handle_bot_name(bot)
         elif text == "@" + BOT_NAME + " help":
             handle_bot_help(bot)
         elif str.startswith(text, "@" + BOT_NAME + " salt "):
-            handle_bot_salt(bot, json_data["subject"]["name"], str.split(text, "salt ", 1)[1])
+            handle_bot_salt(bot, user_from, str.split(text, "salt ", 1)[1])
         elif text == "@" + BOT_NAME + " die":
             kill_bot(bot)
         elif str.__contains__(str.lower(text), "wonder"):
@@ -169,9 +160,9 @@ def handle_bot_salt(bot, user_from, user_to):
     # easter egg: do this 20% of the time..
     elif 10 < number <= 30:
         bot.send_message("how dare you, " + user_from + ", she's a nice lady!")
-    elif 30 < number <= 50:
-        r = requests.get("https://insult.mattbas.org/api/en/insult.json?who=" + user_to)
-        bot.send_message(r.json()["insult"])
+    # elif 30 < number <= 50:
+    #     r = requests.get("https://insult.mattbas.org/api/en/insult.json?who=" + user_to)
+    #     bot.send_message(r.json()["insult"])
     else:
         r = requests.get("https://amused.lib.id/insult@1.0.0/")
         bot.send_message(str.replace(r.json(), "You", user_to + " is a"))
