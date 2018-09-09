@@ -114,11 +114,16 @@ class GroupMeBot(object):
 
 # handle different response scenarios here.
 # currently supports:
-#    1) response = "@[BOT_NAME]", print greeting
-#    2) response = "@[BOT_NAME] help", provide list of commands
-#    3) response = "@[BOT_NAME] salt [USER]", provide random insult to [USER]
-#    4) response contains "wonder", print arrested development reference
+#    1) response = "@[BOT_NAME]", display greeting
+#    2) response = "@[BOT_NAME] help", display list of commands
+#    3) response = "@[BOT_NAME] show scores", display scores for current week
+#    4) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
 #    5) response = "@[BOT_NAME] die", kill program
+#    6) response contains "wonder", display arrested development reference
+#
+# future support:
+#    1) response = "@[BOT_NAME] show top [NUMBER] scores", display top [NUMBER] scores for year
+#    2) response = "@[BOT_NAME] show bottom [NUMBER] scores", display bottom [NUMBER] scores for year
 def handle_response(bot, user_from, group_id, text):
     # get the text from response. if exception, simply return
     try:
