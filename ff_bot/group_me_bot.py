@@ -86,6 +86,7 @@ class GroupMeBot(object):
 
         while True:
             try:
+                print("[" + get_time() + "] Connecting to server.")
                 async with websockets.connect("wss://push.groupme.com/faye") as ws:
                     await ws.send(json.dumps(template))
                     r = await ws.recv()
@@ -200,7 +201,7 @@ def handle_bot_wonder(bot):
 # handle when response = "@[BOT_NAME] show scores"
 # display scores for current week
 def handle_bot_scores(bot):
-    matchups = espn.get_scores(1)
+    matchups = espn.get_scores(espn.get_current_week())
     scores = ""
 
     for m in matchups:
@@ -223,7 +224,7 @@ def handle_bot_scores(bot):
 # handle when response = "@[BOT_NAME] show top [TOTAL] players"
 # display top [TOTAL] players for the current week
 def handle_bot_top_players(bot, total):
-    players = espn.get_top_players(int(total), 1)
+    players = espn.get_top_players(int(total), espn.get_current_week())
 
     response = "This Week's Top " + str(len(players)) + " Players:\n"
     for player in players:

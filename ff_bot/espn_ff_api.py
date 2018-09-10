@@ -84,3 +84,10 @@ def get_position(position_id):
         return "D"
     else:
         return "N/A"
+
+
+# get the current week
+def get_current_week():
+    r = requests.get("http://games.espn.com/ffl/api/v2/scoreboard",
+                     params={"leagueId": LEAGUE_ID, "seasonId": LEAGUE_YEAR})
+    return r.json()["scoreboard"]["matchupPeriodId"]
