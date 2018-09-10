@@ -17,8 +17,7 @@ def get_scores(week):
 def get_top_players(total, week):
     players = []
 
-    if total > 20:
-        total = 20
+    total = min(total, 25)
 
     for m in get_scores(week):
         team_id = m.home_team.team_id
@@ -79,7 +78,9 @@ def get_position(position_id):
         return "WR"
     elif position_id == 4:
         return "TE"
-    elif position_id == 16:
+    elif position_id == 5:
         return "K"
+    elif position_id == 16:
+        return "D"
     else:
         return "N/A"
