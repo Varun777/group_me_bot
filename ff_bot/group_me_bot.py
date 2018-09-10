@@ -227,7 +227,7 @@ def handle_bot_top_players(bot, total):
 
     response = "This Week's Top " + str(len(players)) + " Players:\n"
     for player in players:
-        response += str(player["points"]) + " - " + player["name"] + " (" + player["team"] + ")\n"
+        response += "%.2f - %s (%s) - %s\n" % (player["points"], player["name"], player["position"], player["team"])
 
     bot.send_message(response)
 

@@ -12,6 +12,7 @@ league = League(LEAGUE_ID, LEAGUE_YEAR)
 def get_scores(week):
     return league.scoreboard(week)
 
+
 # gets top scoring players in the provided week
 def get_top_players(total, week):
     players = []
@@ -30,6 +31,7 @@ def get_top_players(total, week):
         # add players from team0 to players list
         for slot in team0["slots"]:
             name = slot["player"]["firstName"] + " " + slot["player"]["lastName"]
+            position = get_position(slot["player"]["defaultPositionId"])
             if "appliedStatTotal" in slot["currentPeriodRealStats"]:
                 points = slot["currentPeriodRealStats"]["appliedStatTotal"]
             else:
@@ -38,6 +40,7 @@ def get_top_players(total, week):
 
             player_obj = {
                 "name": name,
+                "position": position,
                 "points": points,
                 "team": team_name
             }
@@ -46,6 +49,7 @@ def get_top_players(total, week):
         # add players from team1 to players list
         for slot in team1["slots"]:
             name = slot["player"]["firstName"] + " " + slot["player"]["lastName"]
+            position = get_position(slot["player"]["defaultPositionId"])
             if "appliedStatTotal" in slot["currentPeriodRealStats"]:
                 points = slot["currentPeriodRealStats"]["appliedStatTotal"]
             else:
@@ -54,6 +58,7 @@ def get_top_players(total, week):
 
             player_obj = {
                 "name": name,
+                "position": position,
                 "points": points,
                 "team": team_name
             }
@@ -63,3 +68,18 @@ def get_top_players(total, week):
     sorted_players = sorted(players, key=itemgetter('points'), reverse=True)
     return sorted_players[:int(total)]
 
+
+# converts positionId to String
+def get_position(position_id):
+    if position_id == 1:
+        return "QB"
+    elif position_id == 2:
+        return "RB"
+    elif position_id == 3:
+        return "WR"
+    elif position_id == 4:
+        return "TE"
+    elif position_id == 16:
+        return "K"
+    else:
+        return "N/A"
