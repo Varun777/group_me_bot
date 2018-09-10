@@ -4,6 +4,7 @@ import json
 import os
 import random
 import sys
+import re
 import websockets
 import asyncio
 import ff_bot.espn_ff_api as espn
@@ -117,13 +118,14 @@ class GroupMeBot(object):
 #    1) response = "@[BOT_NAME]", display greeting
 #    2) response = "@[BOT_NAME] help", display list of commands
 #    3) response = "@[BOT_NAME] show scores", display scores for current week
-#    4) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
-#    5) response = "@[BOT_NAME] die", kill program
-#    6) response contains "wonder", display arrested development reference
+#    4) response = "@[BOT_NAME] show top [TOTAL] players", display top [TOTAL] players for current week
+#    5) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
+#    6) response = "@[BOT_NAME] die", kill program
+#    7) response contains "wonder", display arrested development reference
 #
 # future support:
-#    1) response = "@[BOT_NAME] show top [NUMBER] scores", display top [NUMBER] scores for year
-#    2) response = "@[BOT_NAME] show bottom [NUMBER] scores", display bottom [NUMBER] scores for year
+#    1) response = "@[BOT_NAME] show top [TOTAL] scores", display top [TOTAL] scores for year
+#    2) response = "@[BOT_NAME] show bottom [TOTAL] scores", display bottom [TOTAL] scores for year
 def handle_response(bot, user_from, group_id, text):
     # get the text from response. if exception, simply return
     try:
@@ -142,6 +144,9 @@ def handle_response(bot, user_from, group_id, text):
             handle_bot_salt(bot, user_from, str.split(text, "salt ", 1)[1])
         elif text == at_bot + " die":
             kill_bot(bot)
+        elif re.match(r'^' + at_bot + ' show top \d+ players$', text):
+            total = re.search(r'\d+', text).group()
+            handle_bot_top_players(bot, total)
         elif str.__contains__(str.lower(text), "wonder"):
             handle_bot_wonder(bot)
     except Exception as ex:
@@ -161,6 +166,7 @@ def handle_bot_help(bot):
     bot.send_message("commands:\n" +
                      "@" + BOT_NAME + " help -- show list of commands\n" +
                      "@" + BOT_NAME + " show scores -- show this weeks scores\n"
+                     "@" + BOT_NAME + " show top [TOTAL] players -- show this weeks top players\n"
                      "@" + BOT_NAME + " salt [USER] -- throw salt at [USER]\n\n"
                      "alerts/breaking news:\n" +
                      "trade alerts (coming soon)\n" +
@@ -194,7 +200,7 @@ def handle_bot_wonder(bot):
 # handle when response = "@[BOT_NAME] show scores"
 # display scores for current week
 def handle_bot_scores(bot):
-    matchups = espn.get_current_scores()
+    matchups = espn.get_scores(1)
     scores = ""
 
     for m in matchups:
@@ -212,6 +218,18 @@ def handle_bot_scores(bot):
         scores += '%s (%.2f) - (%.2f) %s\n' % (first_team_name, first_team_score, second_team_score, second_team_name)
 
     bot.send_message(scores)
+
+
+# handle when response = "@[BOT_NAME] show top [TOTAL] players"
+# display top [TOTAL] players for the current week
+def handle_bot_top_players(bot, total):
+    players = espn.get_top_players(int(total), 1)
+
+    response = "This Week's Top " + str(len(players)) + " Players:\n"
+    for player in players:
+        response += str(player["points"]) + " - " + player["name"] + " (" + player["team"] + ")\n"
+
+    bot.send_message(response)
 
 
 # kill program
