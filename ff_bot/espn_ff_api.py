@@ -29,43 +29,45 @@ def get_top_players(total, week):
 
         # add players from team0 to players list
         for slot in team0["slots"]:
-            name = slot["player"]["firstName"] + " " + slot["player"]["lastName"]
-            position = get_position(slot["player"]["defaultPositionId"])
-            team_name = team0["team"]["teamAbbrev"]
-            started = not slot["slotCategoryId"] == 20
-            if "appliedStatTotal" in slot["currentPeriodRealStats"]:
-                points = slot["currentPeriodRealStats"]["appliedStatTotal"]
-            else:
-                points = 0
+            if "player" in slot:
+                name = slot["player"]["firstName"] + " " + slot["player"]["lastName"]
+                position = get_position(slot["player"]["defaultPositionId"])
+                team_name = team0["team"]["teamAbbrev"]
+                started = not slot["slotCategoryId"] == 20
+                if "appliedStatTotal" in slot["currentPeriodRealStats"]:
+                    points = slot["currentPeriodRealStats"]["appliedStatTotal"]
+                else:
+                    points = 0
 
-            player_obj = {
-                "name": name,
-                "position": position,
-                "points": points,
-                "team": team_name,
-                "started": started
-            }
-            players.append(player_obj)
+                player_obj = {
+                    "name": name,
+                    "position": position,
+                    "points": points,
+                    "team": team_name,
+                    "started": started
+                }
+                players.append(player_obj)
 
         # add players from team1 to players list
         for slot in team1["slots"]:
-            name = slot["player"]["firstName"] + " " + slot["player"]["lastName"]
-            position = get_position(slot["player"]["defaultPositionId"])
-            team_name = team1["team"]["teamAbbrev"]
-            started = not slot["slotCategoryId"] == 20
-            if "appliedStatTotal" in slot["currentPeriodRealStats"]:
-                points = slot["currentPeriodRealStats"]["appliedStatTotal"]
-            else:
-                points = 0
+            if "player" in slot:
+                name = slot["player"]["firstName"] + " " + slot["player"]["lastName"]
+                position = get_position(slot["player"]["defaultPositionId"])
+                team_name = team1["team"]["teamAbbrev"]
+                started = not slot["slotCategoryId"] == 20
+                if "appliedStatTotal" in slot["currentPeriodRealStats"]:
+                    points = slot["currentPeriodRealStats"]["appliedStatTotal"]
+                else:
+                    points = 0
 
-            player_obj = {
-                "name": name,
-                "position": position,
-                "points": points,
-                "team": team_name,
-                "started": started
-            }
-            players.append(player_obj)
+                player_obj = {
+                    "name": name,
+                    "position": position,
+                    "points": points,
+                    "team": team_name,
+                    "started": started
+                }
+                players.append(player_obj)
 
     # sort list by points, and return top [total] players
     sorted_players = sorted(players, key=itemgetter('points'), reverse=True)
