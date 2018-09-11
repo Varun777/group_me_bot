@@ -31,17 +31,19 @@ def get_top_players(total, week):
         for slot in team0["slots"]:
             name = slot["player"]["firstName"] + " " + slot["player"]["lastName"]
             position = get_position(slot["player"]["defaultPositionId"])
+            team_name = team0["team"]["teamAbbrev"]
+            started = not slot["slotCategoryId"] == 20
             if "appliedStatTotal" in slot["currentPeriodRealStats"]:
                 points = slot["currentPeriodRealStats"]["appliedStatTotal"]
             else:
                 points = 0
-            team_name = team0["team"]["teamAbbrev"]
 
             player_obj = {
                 "name": name,
                 "position": position,
                 "points": points,
-                "team": team_name
+                "team": team_name,
+                "started": started
             }
             players.append(player_obj)
 
@@ -49,17 +51,19 @@ def get_top_players(total, week):
         for slot in team1["slots"]:
             name = slot["player"]["firstName"] + " " + slot["player"]["lastName"]
             position = get_position(slot["player"]["defaultPositionId"])
+            team_name = team1["team"]["teamAbbrev"]
+            started = not slot["slotCategoryId"] == 20
             if "appliedStatTotal" in slot["currentPeriodRealStats"]:
                 points = slot["currentPeriodRealStats"]["appliedStatTotal"]
             else:
                 points = 0
-            team_name = team1["team"]["teamAbbrev"]
 
             player_obj = {
                 "name": name,
                 "position": position,
                 "points": points,
-                "team": team_name
+                "team": team_name,
+                "started": started
             }
             players.append(player_obj)
 

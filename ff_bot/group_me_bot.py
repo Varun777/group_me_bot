@@ -36,6 +36,7 @@ class GroupMeBot(object):
         self.subscribe_user(client_id)
         # open websocket connection to listen for messages
         asyncio.get_event_loop().run_until_complete(self.open_websocket(client_id))
+        asyncio.get_event_loop().run_forever()
 
     # handshake for GroupMe listener
     def handshake(self):
@@ -86,7 +87,7 @@ class GroupMeBot(object):
 
         while True:
             try:
-                print("[" + get_time() + "] Connecting to server.")
+                print("[" + get_time() + "] Connecting to server.", flush=True)
                 async with websockets.connect("wss://push.groupme.com/faye") as ws:
                     await ws.send(json.dumps(template))
                     r = await ws.recv()
@@ -98,11 +99,11 @@ class GroupMeBot(object):
 
                         handle_response(self, user_from, group_id, text)
             except websockets.exceptions.ConnectionClosed:
-                print("[" + get_time() + "] ConnectionClosed exception. Continue loop.")
+                print("[" + get_time() + "] ConnectionClosed exception. Continue loop.", flush=True)
             except ConnectionResetError:
-                print("[" + get_time() + "] ConnectionResetError error. Continue loop.")
+                print("[" + get_time() + "] ConnectionResetError error. Continue loop.", flush=True)
             except Exception as ex:
-                print("[" + get_time() + "] " + ex.__repr__() + " exception. Continue loop.")
+                print("[" + get_time() + "] " + ex.__repr__() + " exception. Continue loop.", flush=True)
 
     # Send message from bot to chat room
     def send_message(self, text):
@@ -151,7 +152,7 @@ def handle_response(bot, user_from, group_id, text):
         elif str.__contains__(str.lower(text), "wonder"):
             handle_bot_wonder(bot)
     except Exception as ex:
-        print("[" + get_time() + "] Exception in handle_response: " + ex.__repr__())
+        print("[" + get_time() + "] Exception in handle_response: " + ex.__repr__(), flush=True)
         return
 
 
@@ -226,9 +227,14 @@ def handle_bot_scores(bot):
 def handle_bot_top_players(bot, total):
     players = espn.get_top_players(int(total), espn.get_current_week())
 
-    response = "This Week's Top " + str(len(players)) + " Players:\n"
+    response = "This Week's Top " + str(len(players)) + " Rostered Players:\n"
     for player in players:
-        response += "%.2f - %s (%s) - %s\n" % (player["points"], player["name"], player["position"], player["team"])
+        response += "%.2f - %s (%s) - %s" % (player["points"], player["name"], player["position"], player["team"])
+        if not player["started"]:
+            response += " *"
+        response += "\n"
+
+    response += "(*) = bench player"
 
     bot.send_message(response)
 
