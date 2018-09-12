@@ -21,6 +21,7 @@ class GroupMeBot(object):
     # Creates GroupMe Bot to send messages
     def __init__(self, bot_id):
         self.bot_id = bot_id
+        self.ws_loop = self.init_listener()
 
     def __repr__(self):
         return "GroupMeBot(%s)" % self.bot_id
@@ -35,8 +36,7 @@ class GroupMeBot(object):
         # subscribe to user channel
         self.subscribe_user(client_id)
         # open websocket connection to listen for messages
-        asyncio.get_event_loop().run_until_complete(self.open_websocket(client_id))
-        asyncio.get_event_loop().run_forever()
+        return asyncio.get_event_loop().run_until_complete(self.open_websocket(client_id))
 
     # handshake for GroupMe listener
     def handshake(self):
@@ -92,7 +92,14 @@ class GroupMeBot(object):
                     await ws.send(json.dumps(template))
                     r = await ws.recv()
 
-                    if len(json.loads(r)) > 0 and is_valid_response(json.loads(r)[0]):
+                    # if response is a failure, re-initialize ws connection
+                    if not self.is_success(json.loads(r)[0]):
+                        print("[" + get_time() + "] Connection broken. Re-initializing.", flush=True)
+                        self.ws_loop.close()
+                        asyncio.sleep(1)
+                        self.init_listener()
+                        return
+                    elif len(json.loads(r)) > 0 and self.is_valid_response(json.loads(r)[0]):
                         user_from = json.loads(r)[0]["data"]["subject"]["name"]
                         group_id = json.loads(r)[0]["data"]["subject"]["group_id"]
                         text = json.loads(r)[0]["data"]["subject"]["text"]
@@ -104,6 +111,18 @@ class GroupMeBot(object):
                 print("[" + get_time() + "] ConnectionResetError error. Continue loop.", flush=True)
             except Exception as ex:
                 print("[" + get_time() + "] " + ex.__repr__() + " exception. Continue loop.", flush=True)
+
+    # checks that the provided response has all required fields
+    def is_valid_response(self, response):
+        return "data" in response and \
+               "subject" in response["data"] and \
+               "name" in response["data"]["subject"] and \
+               "group_id" in response["data"]["subject"] and \
+               "text" in response["data"]["subject"]
+
+    # checks that the provided response is a success
+    def is_success(self, response):
+        return "data" in response or ("successful" in response and response["successful"])
 
     # Send message from bot to chat room
     def send_message(self, text):
@@ -178,6 +197,10 @@ def handle_bot_help(bot):
 # handle when response = "@[BOT_NAME] salt [USER]"
 # display random salty comment towards user_to
 def handle_bot_salt(bot, user_from, user_to):
+    if str.__contains__(str.lower(user_to), str.lower(BOT_NAME)):
+        bot.send_message("listen here you lil shit...")
+        return
+
     number = random.randint(1, 100)
     # easter egg: do this 10% of the time..
     if number <= 10:
@@ -245,15 +268,6 @@ def kill_bot(bot):
     sys.exit(0)
 
 
-# checks that the provided response has all required fields
-def is_valid_response(response):
-    return "data" in response and \
-           "subject" in response["data"] and \
-           "name" in response["data"]["subject"] and \
-           "group_id" in response["data"]["subject"] and \
-           "text" in response["data"]["subject"]
-
-
 # helper function to get current time as HH:MM:SS UTC
 def get_time():
     return time.strftime("%T %Z", time.localtime(time.time()))
@@ -261,8 +275,7 @@ def get_time():
 
 # main class
 def bot_main():
-    bot = GroupMeBot(BOT_ID)
-    bot.init_listener()
+    GroupMeBot(BOT_ID)
 
 
 if __name__ == '__main__':
