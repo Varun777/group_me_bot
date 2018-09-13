@@ -1,6 +1,7 @@
 from espnff import League
 import os
 import requests
+import time
 from operator import itemgetter
 
 LEAGUE_ID = os.environ["LEAGUE_ID"]
@@ -90,6 +91,36 @@ def get_position(position_id):
         return "D"
     else:
         return "N/A"
+
+
+# gets the most recent transaction with transactionLogItemtypeId equal to tran_id
+#
+# tranType = 1: Moved
+# tranType = 2: Added
+# tranType = 3: Dropped
+# tranType = 4: Traded
+# tranType = 5: Drafted
+def get_latest_trade_time():
+    r = requests.get("http://games.espn.com/ffl/api/v2/recentActivity",
+                     params={"leagueId": LEAGUE_ID, "seasonId": LEAGUE_YEAR})
+    transactions = r.json()["items"]
+    for t in transactions:
+        if "transactionLogItemTypeId" in t and t["transactionLogItemTypeId"] == 4:
+            pattern = "%Y-%m-%dT%H:%M:%S.%fZ"
+            epoch = int(time.mktime(time.strptime(t["date"], pattern)))
+            return epoch
+    return -1
+
+
+# gets the most recent trades
+#
+# tranType = 1: Moved
+# tranType = 2: Added
+# tranType = 3: Dropped
+# tranType = 4: Traded
+# tranType = 5: Drafted
+def get_latest_trades(limit):
+    return None
 
 
 # get the current week

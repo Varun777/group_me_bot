@@ -15,6 +15,7 @@ BOT_NAME = os.environ["BOT_NAME"]
 USER_ID = os.environ["USER_ID"]
 GROUP_ID = os.environ["GROUP_ID"]
 ACCESS_TOKEN = os.environ["ACCESS_TOKEN"]
+LATEST_TRADE_TIME = espn.get_latest_trade_time()
 
 
 class GroupMeBot(object):
@@ -147,6 +148,7 @@ class GroupMeBot(object):
 # future support:
 #    1) response = "@[BOT_NAME] show top [TOTAL] scores", display top [TOTAL] scores for year
 #    2) response = "@[BOT_NAME] show bottom [TOTAL] scores", display bottom [TOTAL] scores for year
+#    3) response = "@[BOT_NAME] show last [TOTAL] trades", display last [TOTAL] trades
 def handle_response(bot, user_from, group_id, text):
     # get the text from response. if exception, simply return
     try:
@@ -168,6 +170,9 @@ def handle_response(bot, user_from, group_id, text):
         elif re.match(r'^' + at_bot + ' show top \d+ players$', text):
             total = re.search(r'\d+', text).group()
             handle_bot_top_players(bot, total)
+        elif re.match(r'^' + at_bot + ' show last \d+ trades$', text):
+            total = re.search(r'\d+', text).group()
+            handle_bot_last_trades(bot, total)
         elif str.__contains__(str.lower(text), "wonder"):
             handle_bot_wonder(bot)
     except Exception as ex:
@@ -206,9 +211,9 @@ def handle_bot_salt(bot, user_from, user_to):
     if number <= 10:
         bot.send_message(user_from + " likes little boys.")
     # easter egg: do this 20% of the time..
-    elif 10 < number <= 30:
+    elif 10 < number <= 20:
         bot.send_message("how dare you, " + user_from + ", she's a nice lady!")
-    # elif 30 < number <= 50:
+    # elif 20 < number <= 40:
     #     r = requests.get("https://insult.mattbas.org/api/en/insult.json?who=" + user_to)
     #     bot.send_message(r.json()["insult"])
     else:
@@ -260,6 +265,13 @@ def handle_bot_top_players(bot, total):
     response += "(*) = bench player"
 
     bot.send_message(response)
+
+
+# handle when response = "@[BOT_NAME] show last [TOTAL] trades"
+# display last [TOTAL] trades
+def handle_bot_last_trades(bot, limit):
+    espn.get_latest_trades(limit)
+    bot.send_message("under construction")
 
 
 # kill program
