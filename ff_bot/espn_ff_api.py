@@ -93,6 +93,22 @@ def get_position(position_id):
         return "N/A"
 
 
+# gets name of the team with the provided team id
+def get_team(team_id):
+    r = requests.get("http://games.espn.com/ffl/api/v2/teams",
+                     params={"leagueId": LEAGUE_ID, "seasonId": LEAGUE_YEAR})
+    teams = r.json()["teams"]
+    for t in teams:
+        if t["teamId"] == team_id:
+            return {
+                "name": t["teamLocation"] + " " + t["teamNickname"],
+                "abbrev": t["teamAbbrev"],
+                "id": team_id
+            }
+
+    return None
+
+
 # gets the most recent transaction with transactionLogItemtypeId equal to tran_id
 #
 # tranType = 1: Moved
@@ -110,6 +126,44 @@ def get_latest_trade_time():
             epoch = int(time.mktime(time.strptime(t["date"], pattern)))
             return epoch
     return -1
+
+
+def get_latest_trade():
+    r = requests.get("http://games.espn.com/ffl/api/v2/recentActivity",
+                     params={"leagueId": LEAGUE_ID, "seasonId": LEAGUE_YEAR})
+    transactions = r.json()["items"]
+    for t in transactions:
+        if "transactionLogItemTypeId" in t and t["transactionLogItemTypeId"] == 4:
+            players = []
+            pending_items = t["pendingMoveItems"]
+            for p in pending_items:
+                r = requests.get("http://games.espn.com/ffl/api/v2/playerInfo",
+                                 params={"playerId": p["playerId"]})
+
+                player = r.json()["playerInfo"]["players"][0]["player"]
+                name = player["firstName"] + " " + player["lastName"]
+                position = get_position(player["defaultPositionId"])
+
+                players.append({
+                    "name": name,
+                    "position": position,
+                    "from": p["fromTeamId"],
+                    "to": p["toTeamId"]
+                })
+
+            teams = []
+            if t["teamsInvolved"] is not None:
+                for team_id in t["teamsInvolved"]:
+                    teams.append(get_team(team_id))
+
+            pattern = "%Y-%m-%dT%H:%M:%S.%fZ"
+            return {
+                "teams": teams,
+                "players": players,
+                "time": int(time.mktime(time.strptime(t["date"], pattern)))
+            }
+
+    return None
 
 
 # gets the most recent trades

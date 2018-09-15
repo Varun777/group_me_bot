@@ -193,10 +193,7 @@ def handle_bot_help(bot):
                      "@" + BOT_NAME + " help -- show list of commands\n" +
                      "@" + BOT_NAME + " show scores -- show this weeks scores\n"
                      "@" + BOT_NAME + " show top [TOTAL] players -- show this weeks top players\n"
-                     "@" + BOT_NAME + " salt [USER] -- throw salt at [USER]\n\n"
-                     "alerts/breaking news:\n" +
-                     "trade alerts (coming soon)\n" +
-                     "broken records (coming soon)\n")
+                     "@" + BOT_NAME + " salt [USER] -- throw salt at [USER]\n")
 
 
 # handle when response = "@[BOT_NAME] salt [USER]"
@@ -270,8 +267,41 @@ def handle_bot_top_players(bot, total):
 # handle when response = "@[BOT_NAME] show last [TOTAL] trades"
 # display last [TOTAL] trades
 def handle_bot_last_trades(bot, limit):
-    espn.get_latest_trades(limit)
     bot.send_message("under construction")
+
+
+# called from scheduler
+# checks if there has been a new trade since the last attempt
+# handles scenario by sending bot message
+def handle_trade_alert(bot):
+    global LATEST_TRADE_TIME
+    latest_trade = espn.get_latest_trade()
+
+    # if no trade has occurred, simply return
+    if latest_trade is None:
+        return
+
+    if latest_trade["time"] > LATEST_TRADE_TIME:
+        LATEST_TRADE_TIME = latest_trade["time"]
+
+        team_0 = latest_trade["teams"][0]
+        team_1 = latest_trade["teams"][1]
+        players_0 = ""
+        players_1 = ""
+
+        for p in latest_trade["players"]:
+            if p["from"] == team_1["id"]:
+                players_0 += p["name"] + " " + "(" + p["position"] + ")\n"
+            else:
+                players_1 += p["name"] + " " + "(" + p["position"] + ")\n"
+
+        bot.send_message("BREAKING NEWS!\n" +
+                         "There has been a trade between " + team_0["name"] + " and " + team_1["name"] +
+                         ". Here are the details...\n\n" +
+                         team_0["abbrev"] + " receives:\n" +
+                         players_0 + "\n" +
+                         team_1["abbrev"] + " receives:\n" +
+                         players_1)
 
 
 # kill program
@@ -283,6 +313,13 @@ def kill_bot(bot):
 # helper function to get current time as HH:MM:SS UTC
 def get_time():
     return time.strftime("%T %Z", time.localtime(time.time()))
+
+# put scheduled alerts here. alert ideas:
+# Monday evening alert showing the top 10 players from the previous week
+# Monday evening alert showing if any scores broke through the top 10 scores of the year
+# Tuesday/Wednesday morning alert showing which players were recently added from waivers
+# Thursday morning alert showing what players to watch in the Thursday night game
+# Breaking news alert for trades
 
 
 # main class
