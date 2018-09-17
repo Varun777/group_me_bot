@@ -19,11 +19,20 @@ LATEST_TRADE_TIME = espn.get_latest_trade_time()
 
 
 # Send message from bot to chat room
-def send_message(text):
+# Note: only images that are uploaded to groupme's image service will display
+# See here: https://dev.groupme.com/docs/image_service
+def send_message(text="", image_url=None):
+    attachments = []
+    if image_url is not None:
+        attachments = [{
+            "type": "image",
+            "url": image_url
+        }]
+
     template = {
         "bot_id": BOT_ID,
         "text": text,
-        "attachments": []}
+        "attachments": attachments}
     headers = {'content-type': 'application/json'}
     requests.post("https://api.groupme.com/v3/bots/post", data=json.dumps(template), headers=headers)
 
@@ -200,8 +209,8 @@ def handle_trade_alert():
             else:
                 players_1 += p["name"] + " " + "(" + p["position"] + ")\n"
 
-        send_message("BREAKING NEWS!\n" +
-                     "There has been a trade between " + team_0["name"] + " and " + team_1["name"] +
+        send_message(image_url="https://i.groupme.com/500x281.jpeg.87bd736636764acf86e1bd131a6f9373")
+        send_message("There has been a trade between " + team_0["name"] + " and " + team_1["name"] +
                      ". Here are the details...\n\n" +
                      team_0["abbrev"] + " receives:\n" +
                      players_0 + "\n" +
