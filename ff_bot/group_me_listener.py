@@ -78,16 +78,14 @@ async def open_websocket(client_id, callback):
 
     while True:
         try:
-            print("[" + utils.get_time() + "][" + str.upper(BOT_NAME) + "] " +
-                  "Connecting to server.", flush=True)
+            utils.out("Connecting to server.")
             async with websockets.connect("wss://push.groupme.com/faye") as ws:
                 await ws.send(json.dumps(template))
                 r = await ws.recv()
 
                 # if response is a failure, re-initialize ws connection
                 if not is_success(json.loads(r)[0]):
-                    print("[" + utils.get_time() + "][" + str.upper(BOT_NAME) + "] " +
-                          "Connection broken. Re-initializing.", flush=True)
+                    utils.out("Connection broken. Re-initializing.")
                     asyncio.get_event_loop().close()
                     asyncio.sleep(1)
                     init(callback)
@@ -99,14 +97,11 @@ async def open_websocket(client_id, callback):
 
                     callback(user_from, group_id, text)
         except websockets.exceptions.ConnectionClosed:
-            print("[" + utils.get_time() + "][" + str.upper(BOT_NAME) + "] " +
-                  "ConnectionClosed exception. Continue loop.", flush=True)
+            utils.out("ConnectionClosed exception. Continue loop.")
         except ConnectionResetError:
-            print("[" + utils.get_time() + "][" + str.upper(BOT_NAME) + "] " +
-                  "ConnectionResetError error. Continue loop.", flush=True)
+            utils.out("ConnectionResetError error. Continue loop.")
         except Exception as ex:
-            print("[" + utils.get_time() + "][" + str.upper(BOT_NAME) + "] " +
-                  ex.__repr__() + " exception. Continue loop.", flush=True)
+            utils.out(ex.__repr__() + " exception. Continue loop.")
 
 
 # checks that the provided response has all required fields

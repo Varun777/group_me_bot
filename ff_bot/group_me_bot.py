@@ -81,8 +81,7 @@ def handle_response(user_from, group_id, text):
         elif str.__contains__(str.lower(text), "wonder"):
             handle_bot_wonder()
     except Exception as ex:
-        print("[" + utils.get_time() + "][" + str.upper(BOT_NAME) + "] " +
-              "Exception in handle_response: " + ex.__repr__(), flush=True)
+        utils.out("Exception in handle_response: " + ex.__repr__())
         return
 
 
@@ -188,7 +187,7 @@ def handle_bot_last_trades(limit):
 # checks if there has been a new trade since the last attempt
 # handles scenario by sending bot message
 def handle_trade_alert():
-    print("[" + utils.get_time() + "][" + str.upper(BOT_NAME) + "] Handle trade alert.", flush=True)
+    utils.out("Handle trade alert.")
     global LATEST_TRADE_TIME
     latest_trade = espn.get_latest_trade()
 
@@ -211,8 +210,8 @@ def handle_trade_alert():
                 players_1 += p["name"] + " " + "(" + p["position"] + ")\n"
 
         send_message(image_url="https://i.groupme.com/500x281.jpeg.87bd736636764acf86e1bd131a6f9373")
-        send_message("There has been a trade between " + team_0["name"] + " and " + team_1["name"] +
-                     ". Here are the details...\n\n" +
+        send_message("Trade confirmed between " + team_0["name"] + " and " + team_1["name"] +
+                     ", according to multiple sauces. Here are the details...\n\n" +
                      team_0["abbrev"] + " receives:\n" +
                      players_0 + "\n" +
                      team_1["abbrev"] + " receives:\n" +
