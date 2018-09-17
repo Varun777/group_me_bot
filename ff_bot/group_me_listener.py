@@ -7,6 +7,7 @@ import asyncio
 import ff_bot.utils as utils
 
 # environment vars
+BOT_NAME = os.environ["BOT_NAME"]
 USER_ID = os.environ["USER_ID"]
 GROUP_ID = os.environ["GROUP_ID"]
 ACCESS_TOKEN = os.environ["ACCESS_TOKEN"]
@@ -77,14 +78,16 @@ async def open_websocket(client_id, callback):
 
     while True:
         try:
-            print("[" + utils.get_time() + "] Connecting to server.", flush=True)
+            print("[" + utils.get_time() + "][" + str.upper(BOT_NAME) + "] " +
+                  "Connecting to server.", flush=True)
             async with websockets.connect("wss://push.groupme.com/faye") as ws:
                 await ws.send(json.dumps(template))
                 r = await ws.recv()
 
                 # if response is a failure, re-initialize ws connection
                 if not is_success(json.loads(r)[0]):
-                    print("[" + utils.get_time() + "] Connection broken. Re-initializing.", flush=True)
+                    print("[" + utils.get_time() + "][" + str.upper(BOT_NAME) + "] " +
+                          "Connection broken. Re-initializing.", flush=True)
                     asyncio.get_event_loop().close()
                     asyncio.sleep(1)
                     init(callback)
@@ -96,11 +99,14 @@ async def open_websocket(client_id, callback):
 
                     callback(user_from, group_id, text)
         except websockets.exceptions.ConnectionClosed:
-            print("[" + utils.get_time() + "] ConnectionClosed exception. Continue loop.", flush=True)
+            print("[" + utils.get_time() + "][" + str.upper(BOT_NAME) + "] " +
+                  "ConnectionClosed exception. Continue loop.", flush=True)
         except ConnectionResetError:
-            print("[" + utils.get_time() + "] ConnectionResetError error. Continue loop.", flush=True)
+            print("[" + utils.get_time() + "][" + str.upper(BOT_NAME) + "] " +
+                  "ConnectionResetError error. Continue loop.", flush=True)
         except Exception as ex:
-            print("[" + utils.get_time() + "] " + ex.__repr__() + " exception. Continue loop.", flush=True)
+            print("[" + utils.get_time() + "][" + str.upper(BOT_NAME) + "] " +
+                  ex.__repr__() + " exception. Continue loop.", flush=True)
 
 
 # checks that the provided response has all required fields

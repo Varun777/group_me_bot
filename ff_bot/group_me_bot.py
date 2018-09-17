@@ -43,14 +43,14 @@ def send_message(text="", image_url=None):
 #    2) response = "@[BOT_NAME] help", display list of commands
 #    3) response = "@[BOT_NAME] show scores", display scores for current week
 #    4) response = "@[BOT_NAME] show top [TOTAL] scores", display top [TOTAL] scores for current year
-#    4) response = "@[BOT_NAME] show top [TOTAL] players", display top [TOTAL] players for current week
-#    5) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
-#    6) response = "@[BOT_NAME] die", kill program
-#    7) response contains "wonder", display arrested development reference
+#    5) response = "@[BOT_NAME] show top [TOTAL] players", display top [TOTAL] players for current week
+#    6) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
+#    7) response = "@[BOT_NAME] die", kill program
+#    8) response contains "wonder", display arrested development reference
 #
 # future support:
-#    2) response = "@[BOT_NAME] show bottom [TOTAL] scores", display bottom [TOTAL] scores for year
-#    3) response = "@[BOT_NAME] show last [TOTAL] trades", display last [TOTAL] trades
+#    1) response = "@[BOT_NAME] show bottom [TOTAL] scores", display bottom [TOTAL] scores for year
+#    2) response = "@[BOT_NAME] show last [TOTAL] trades", display last [TOTAL] trades
 def handle_response(user_from, group_id, text):
     # get the text from response. if exception, simply return
     try:
@@ -81,7 +81,8 @@ def handle_response(user_from, group_id, text):
         elif str.__contains__(str.lower(text), "wonder"):
             handle_bot_wonder()
     except Exception as ex:
-        print("[" + utils.get_time() + "] Exception in handle_response: " + ex.__repr__(), flush=True)
+        print("[" + utils.get_time() + "][" + str.upper(BOT_NAME) + "] " +
+              "Exception in handle_response: " + ex.__repr__(), flush=True)
         return
 
 
@@ -187,7 +188,7 @@ def handle_bot_last_trades(limit):
 # checks if there has been a new trade since the last attempt
 # handles scenario by sending bot message
 def handle_trade_alert():
-    print("[" + utils.get_time() + "] Handle trade alert.", flush=True)
+    print("[" + utils.get_time() + "][" + str.upper(BOT_NAME) + "] Handle trade alert.", flush=True)
     global LATEST_TRADE_TIME
     latest_trade = espn.get_latest_trade()
 
