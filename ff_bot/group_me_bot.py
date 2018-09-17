@@ -210,8 +210,8 @@ def handle_trade_alert():
                 players_1 += p["name"] + " " + "(" + p["position"] + ")\n"
 
         send_message(image_url="https://i.groupme.com/500x281.jpeg.87bd736636764acf86e1bd131a6f9373")
-        send_message("Trade confirmed between " + team_0["name"] + " and " + team_1["name"] +
-                     ", according to multiple sauces. Here are the details...\n\n" +
+        send_message(team_0["name"] + " and " + team_1["name"] + " have agreed on a trade, "
+                     "multiple sauces tell " + str.lower(BOT_NAME) + ". Here are the details...\n\n" +
                      team_0["abbrev"] + " receives:\n" +
                      players_0 + "\n" +
                      team_1["abbrev"] + " receives:\n" +
