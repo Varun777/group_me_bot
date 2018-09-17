@@ -1,7 +1,7 @@
-from espnff import League
 import os
 import requests
 import time
+from espnff import League
 from operator import itemgetter
 
 LEAGUE_ID = os.environ["LEAGUE_ID"]
@@ -116,12 +116,13 @@ def get_team(team_id):
 # tranType = 3: Dropped
 # tranType = 4: Traded
 # tranType = 5: Drafted
+# tranType = 11: Trade Accepted?
 def get_latest_trade_time():
     r = requests.get("http://games.espn.com/ffl/api/v2/recentActivity",
                      params={"leagueId": LEAGUE_ID, "seasonId": LEAGUE_YEAR})
     transactions = r.json()["items"]
     for t in transactions:
-        if "transactionLogItemTypeId" in t and t["transactionLogItemTypeId"] == 4:
+        if "transactionLogItemTypeId" in t and t["transactionLogItemTypeId"] == 11:
             pattern = "%Y-%m-%dT%H:%M:%S.%fZ"
             epoch = int(time.mktime(time.strptime(t["date"], pattern)))
             return epoch
@@ -133,7 +134,7 @@ def get_latest_trade():
                      params={"leagueId": LEAGUE_ID, "seasonId": LEAGUE_YEAR})
     transactions = r.json()["items"]
     for t in transactions:
-        if "transactionLogItemTypeId" in t and t["transactionLogItemTypeId"] == 4:
+        if "transactionLogItemTypeId" in t and t["transactionLogItemTypeId"] == 11:
             players = []
             pending_items = t["pendingMoveItems"]
             for p in pending_items:
