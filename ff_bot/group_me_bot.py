@@ -6,6 +6,7 @@ import sys
 import re
 import threading
 from apscheduler.schedulers.blocking import BlockingScheduler
+import ff_bot.salter as salter
 import ff_bot.utils as utils
 import ff_bot.espn_ff_api as espn
 import ff_bot.group_me_listener as group_listener
@@ -116,12 +117,8 @@ def handle_bot_salt(user_from, user_to):
     # easter egg: do this 20% of the time..
     elif 10 < number <= 20:
         send_message("how dare you, " + user_from + ", she's a nice lady!")
-    # elif 20 < number <= 40:
-    #     r = requests.get("https://insult.mattbas.org/api/en/insult.json?who=" + user_to)
-    #     bot.send_message(r.json()["insult"])
     else:
-        r = requests.get("https://amused.lib.id/insult@1.0.0/")
-        send_message(str.replace(r.json(), "You", user_to + " is a"))
+        send_message(salter.throw_salt(user_to))
 
 
 # handle when response = "wonder"
