@@ -1150,5 +1150,9 @@ NOUNS = [
 "jealous bored child",
 "comic divergent thinking",
 "control-top light bulb",
-"must-have creep"
+"must-have creep",
+"Smegma",
+"a big black dick",
+"a bigger blacker dick",
+"queef"
 ]
