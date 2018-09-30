@@ -134,7 +134,7 @@ def handle_bot_wonder():
 # handle when response = "@[BOT_NAME] show scores"
 # display scores for current week
 def handle_bot_scores():
-    matchups = espn.get_scores(espn.get_current_week())
+    matchups = espn.get_scores(espn.get_current_week(), espn.LEAGUE_YEAR)
     scores = ""
 
     for m in matchups:

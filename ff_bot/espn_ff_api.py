@@ -82,7 +82,7 @@ def get_top_players(total, week):
     players = []
     total = min(total, 25)
 
-    for m in get_scores(week):
+    for m in get_scores(week, LEAGUE_YEAR):
         team_id = m.home_team.team_id
         r = requests.get("http://games.espn.com/ffl/api/v2/boxscore",
                          params={"leagueId": LEAGUE_ID, "seasonId": LEAGUE_YEAR, "matchupPeriodId": week, "teamId": team_id})
