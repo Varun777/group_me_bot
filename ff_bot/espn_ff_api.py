@@ -31,12 +31,14 @@ def get_top_scores(total):
             score_obj0 = {
                 "team": s.home_team.team_name,
                 "score": s.home_score,
-                "week": w
+                "week": w,
+                "win": s.home_score > s.away_score
             }
             score_obj1 = {
                 "team": s.away_team.team_name,
                 "score": s.away_score,
-                "week": w
+                "week": w,
+                "win": s.away_score > s.home_score
             }
 
             scores.append(score_obj0)

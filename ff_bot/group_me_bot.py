@@ -161,7 +161,12 @@ def handle_bot_top_scores(total):
 
     response = "This Year's Top " + str(len(scores)) + " Scores:\n"
     for score in scores:
-        response += "%.2f - %s (%d)\n" % (score["score"], score["team"], score["week"])
+        response += "%.2f - %s (%d)" % (score["score"], score["team"], score["week"])
+        if not score["win"]:
+            response += " *"
+        response += "\n"
+
+    response += "(*) = lost"
 
     send_message(response)
 
