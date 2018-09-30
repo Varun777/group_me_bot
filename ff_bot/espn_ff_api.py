@@ -6,18 +6,80 @@ from operator import itemgetter
 
 LEAGUE_ID = os.environ["LEAGUE_ID"]
 LEAGUE_YEAR = os.environ["LEAGUE_YEAR"]
-league = League(LEAGUE_ID, LEAGUE_YEAR)
 
 
 # gets the provided weeks matchups
-def get_scores(week):
+def get_scores(week, year):
+    league = League(LEAGUE_ID, year)
     return league.scoreboard(week)
+
+
+# get final week of the regular season for provided year
+def get_final_week(year):
+    league = League(LEAGUE_ID, year)
+    return league.settings.reg_season_count
+
+
+# gets top scores this year
+def get_top_scores(total):
+    scores = []
+    total = min(total, 25)
+
+    current_week = get_current_week()
+    for w in range(1, current_week):
+        for s in get_scores(w, LEAGUE_YEAR):
+            score_obj0 = {
+                "team": s.home_team.team_name,
+                "score": s.home_score,
+                "week": w
+            }
+            score_obj1 = {
+                "team": s.away_team.team_name,
+                "score": s.away_score,
+                "week": w
+            }
+
+            scores.append(score_obj0)
+            scores.append(score_obj1)
+
+    # sort list by points, and return top [total] scores
+    sorted_scores = sorted(scores, key=itemgetter('score'), reverse=True)
+    return sorted_scores[:int(total)]
+
+
+# get top scores of all time
+def get_top_scores_ever(total):
+    scores = []
+    total = min(total, 25)
+
+    # TODO: replace 2012 with calculated first league year
+    for y in range(int(LEAGUE_YEAR), 2012, -1):
+        for w in range(1, get_final_week(y)+1):
+            for s in get_scores(w, y):
+                score_obj0 = {
+                    "owner": s.home_team.owner,
+                    "score": s.home_score,
+                    "week": w,
+                    "year": y
+                }
+            score_obj1 = {
+                "owner": s.away_team.owner,
+                "score": s.away_score,
+                "week": w,
+                "year": y
+            }
+
+            scores.append(score_obj0)
+            scores.append(score_obj1)
+
+    # sort list by points, and return top [total] scores
+    sorted_scores = sorted(scores, key=itemgetter('score'), reverse=True)
+    return sorted_scores[:int(total)]
 
 
 # gets top scoring players in the provided week
 def get_top_players(total, week):
     players = []
-
     total = min(total, 25)
 
     for m in get_scores(week):

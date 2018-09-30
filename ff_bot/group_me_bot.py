@@ -44,10 +44,11 @@ def send_message(text="", image_url=None):
 #    2) response = "@[BOT_NAME] help", display list of commands
 #    3) response = "@[BOT_NAME] show scores", display scores for current week
 #    4) response = "@[BOT_NAME] show top [TOTAL] scores", display top [TOTAL] scores for current year
-#    5) response = "@[BOT_NAME] show top [TOTAL] players", display top [TOTAL] players for current week
-#    6) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
-#    7) response = "@[BOT_NAME] die", kill program
-#    8) response contains "wonder", display arrested development reference
+#    5) response = "@[BOT_NAME] show top [TOTAL] scores ever", display top [TOTAL] scores ever
+#    6) response = "@[BOT_NAME] show top [TOTAL] players", display top [TOTAL] players for current week
+#    7) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
+#    8) response = "@[BOT_NAME] die", kill program
+#    9) response contains "wonder", display arrested development reference
 #
 # future support:
 #    1) response = "@[BOT_NAME] show bottom [TOTAL] scores", display bottom [TOTAL] scores for year
@@ -76,6 +77,9 @@ def handle_response(user_from, group_id, text):
         elif re.match(r'^' + at_bot + ' show top \d+ scores$', text):
             total = re.search(r'\d+', text).group()
             handle_bot_top_scores(total)
+        # elif re.match(r'^' + at_bot + ' show top \d+ scores ever$', text):
+        #     total = re.search(r'\d+', text).group()
+        #     handle_bot_top_scores_ever(total)
         elif re.match(r'^' + at_bot + ' show last \d+ trades$', text):
             total = re.search(r'\d+', text).group()
             handle_bot_last_trades(total)
@@ -153,8 +157,25 @@ def handle_bot_scores():
 # handle when response = "@[BOT_NAME] show top [TOTAL] scores"
 # display top [TOTAL] players for the current season
 def handle_bot_top_scores(total):
-    # scores = espn.get_top_scores(int(total), espn.LEAGUE_YEAR)
-    send_message("under construction")
+    scores = espn.get_top_scores(int(total))
+
+    response = "This Year's Top " + str(len(scores)) + " Scores:\n"
+    for score in scores:
+        response += "%.2f - %s (%d)\n" % (score["score"], score["team"], score["week"])
+
+    send_message(response)
+
+
+# handle when response = "@[BOT_NAME] show top [TOTAL] scores ever"
+# display top [TOTAL] players for the current season
+def handle_bot_top_scores_ever(total):
+    scores = espn.get_top_scores_ever(int(total))
+
+    response = "Top " + str(len(scores)) + " Scores OF ALL TIME:\n"
+    for score in scores:
+        response += "%.2f - %s - %d (%d)\n" % (score["score"], score["owner"], score["year"], score["week"])
+
+    send_message(response)
 
 
 # handle when response = "@[BOT_NAME] show top [TOTAL] players"
