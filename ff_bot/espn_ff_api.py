@@ -26,7 +26,7 @@ def get_top_scores(total):
     total = min(total, 25)
 
     current_week = get_current_week()
-    for w in range(1, current_week):
+    for w in range(1, current_week + 1):
         for s in get_scores(w, LEAGUE_YEAR):
             score_obj0 = {
                 "team": s.home_team.team_name,
@@ -56,7 +56,7 @@ def get_top_scores_ever(total):
 
     # TODO: replace 2012 with calculated first league year
     for y in range(int(LEAGUE_YEAR), 2012, -1):
-        for w in range(1, get_final_week(y)+1):
+        for w in range(1, get_final_week(y) + 1):
             for s in get_scores(w, y):
                 score_obj0 = {
                     "owner": s.home_team.owner,
