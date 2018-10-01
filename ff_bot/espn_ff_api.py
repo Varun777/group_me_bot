@@ -9,7 +9,7 @@ LEAGUE_YEAR = os.environ["LEAGUE_YEAR"]
 
 
 # gets the provided weeks matchups
-def get_scores(week, year):
+def get_scoreboard(week, year):
     league = League(LEAGUE_ID, year)
     return league.scoreboard(week)
 
@@ -20,14 +20,17 @@ def get_final_week(year):
     return league.settings.reg_season_count
 
 
-# gets top scores this year
-def get_top_scores(total):
+# gets scores this year in order of points
+def get_scores(total, descending):
     scores = []
     total = min(total, 25)
 
-    current_week = get_current_week()
-    for w in range(1, current_week + 1):
-        for s in get_scores(w, LEAGUE_YEAR):
+    final_week = get_current_week()
+    if descending:
+        final_week = final_week + 1
+
+    for w in range(1, final_week):
+        for s in get_scoreboard(w, LEAGUE_YEAR):
             score_obj0 = {
                 "team": s.home_team.team_name,
                 "score": s.home_score,
@@ -44,8 +47,8 @@ def get_top_scores(total):
             scores.append(score_obj0)
             scores.append(score_obj1)
 
-    # sort list by points, and return top [total] scores
-    sorted_scores = sorted(scores, key=itemgetter('score'), reverse=True)
+    # sort list by points, and return [total] scores
+    sorted_scores = sorted(scores, key=itemgetter('score'), reverse=descending)
     return sorted_scores[:int(total)]
 
 
@@ -57,7 +60,7 @@ def get_top_scores_ever(total):
     # TODO: replace 2012 with calculated first league year
     for y in range(int(LEAGUE_YEAR), 2012, -1):
         for w in range(1, get_final_week(y) + 1):
-            for s in get_scores(w, y):
+            for s in get_scoreboard(w, y):
                 score_obj0 = {
                     "owner": s.home_team.owner,
                     "score": s.home_score,
@@ -84,7 +87,7 @@ def get_top_players(total, week):
     players = []
     total = min(total, 25)
 
-    for m in get_scores(week, LEAGUE_YEAR):
+    for m in get_scoreboard(week, LEAGUE_YEAR):
         team_id = m.home_team.team_id
         r = requests.get("http://games.espn.com/ffl/api/v2/boxscore",
                          params={"leagueId": LEAGUE_ID, "seasonId": LEAGUE_YEAR, "matchupPeriodId": week, "teamId": team_id})

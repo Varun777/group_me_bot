@@ -44,15 +44,15 @@ def send_message(text="", image_url=None):
 #    2) response = "@[BOT_NAME] help", display list of commands
 #    3) response = "@[BOT_NAME] show scores", display scores for current week
 #    4) response = "@[BOT_NAME] show top [TOTAL] scores", display top [TOTAL] scores for current year
-#    5) response = "@[BOT_NAME] show top [TOTAL] scores ever", display top [TOTAL] scores ever
-#    6) response = "@[BOT_NAME] show top [TOTAL] players", display top [TOTAL] players for current week
-#    7) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
-#    8) response = "@[BOT_NAME] die", kill program
-#    9) response contains "wonder", display arrested development reference
+#    5) response = "@[BOT_NAME] show bottom [TOTAL] scores", display bottom [TOTAL] scores for current year
+#    6) response = "@[BOT_NAME] show top [TOTAL] scores ever", display top [TOTAL] scores ever
+#    7) response = "@[BOT_NAME] show top [TOTAL] players", display top [TOTAL] players for current week
+#    8) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
+#    9) response = "@[BOT_NAME] die", kill program
+#    10) response contains "wonder", display arrested development reference
 #
 # future support:
-#    1) response = "@[BOT_NAME] show bottom [TOTAL] scores", display bottom [TOTAL] scores for year
-#    2) response = "@[BOT_NAME] show last [TOTAL] trades", display last [TOTAL] trades
+#    1) ?
 def handle_response(user_from, group_id, text):
     # get the text from response. if exception, simply return
     try:
@@ -77,6 +77,9 @@ def handle_response(user_from, group_id, text):
         elif re.match(r'^' + at_bot + ' show top \d+ scores$', text):
             total = re.search(r'\d+', text).group()
             handle_bot_top_scores(total)
+        elif re.match(r'^' + at_bot + ' show bottom \d+ scores$', text):
+            total = re.search(r'\d+', text).group()
+            handle_bot_bottom_scores(total)
         # elif re.match(r'^' + at_bot + ' show top \d+ scores ever$', text):
         #     total = re.search(r'\d+', text).group()
         #     handle_bot_top_scores_ever(total)
@@ -103,6 +106,7 @@ def handle_bot_help():
                  "@" + BOT_NAME + " help -- show list of commands\n" +
                  "@" + BOT_NAME + " show scores -- show this weeks scores\n"
                  "@" + BOT_NAME + " show top [TOTAL] scores -- show this years top scores\n"
+                 "@" + BOT_NAME + " show bottom [TOTAL] scores -- show this years bottom scores\n"
                  "@" + BOT_NAME + " show top [TOTAL] players -- show this weeks top players\n"
                  "@" + BOT_NAME + " salt [USER] -- throw salt at [USER]\n")
 
@@ -134,7 +138,7 @@ def handle_bot_wonder():
 # handle when response = "@[BOT_NAME] show scores"
 # display scores for current week
 def handle_bot_scores():
-    matchups = espn.get_scores(espn.get_current_week(), espn.LEAGUE_YEAR)
+    matchups = espn.get_scoreboard(espn.get_current_week(), espn.LEAGUE_YEAR)
     scores = ""
 
     for m in matchups:
@@ -155,9 +159,9 @@ def handle_bot_scores():
 
 
 # handle when response = "@[BOT_NAME] show top [TOTAL] scores"
-# display top [TOTAL] players for the current season
+# display top [TOTAL] scores for the current season
 def handle_bot_top_scores(total):
-    scores = espn.get_top_scores(int(total))
+    scores = espn.get_scores(int(total), True)
 
     response = "This Year's Top " + str(len(scores)) + " Scores:\n"
     for score in scores:
@@ -167,6 +171,23 @@ def handle_bot_top_scores(total):
         response += "\n"
 
     response += "(*) = lost"
+
+    send_message(response)
+
+
+# handle when response = "@[BOT_NAME] show bottom [TOTAL] scores"
+# display bottom [TOTAL] scores for the current season
+def handle_bot_bottom_scores(total):
+    scores = espn.get_scores(int(total), False)
+
+    response = "This Year's Worst " + str(len(scores)) + " Scores:\n"
+    for score in scores:
+        response += "%.2f - %s (%d)" % (score["score"], score["team"], score["week"])
+        if score["win"]:
+            response += " *"
+        response += "\n"
+
+    response += "(*) = won"
 
     send_message(response)
 
