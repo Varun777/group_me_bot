@@ -83,9 +83,10 @@ def handle_response(user_from, group_id, text):
         # elif re.match(r'^' + at_bot + ' show top \d+ scores ever$', text):
         #     total = re.search(r'\d+', text).group()
         #     handle_bot_top_scores_ever(total)
-        elif re.match(r'^' + at_bot + ' show last \d+ trades$', text):
-            total = re.search(r'\d+', text).group()
-            handle_bot_last_trades(total)
+        elif re.match(r'^' + at_bot + ' show jujus$', text):
+            handle_bot_jujus()
+        elif re.match(r'^' + at_bot + ' show salties$', text):
+            handle_bot_salties()
         elif str.__contains__(str.lower(text), "wonder"):
             handle_bot_wonder()
     except Exception as ex:
@@ -107,6 +108,8 @@ def handle_bot_help():
                  "@" + BOT_NAME + " show scores -- show this weeks scores\n"
                  "@" + BOT_NAME + " show top [TOTAL] scores -- show this years top scores\n"
                  "@" + BOT_NAME + " show bottom [TOTAL] scores -- show this years bottom scores\n"
+                 "@" + BOT_NAME + " show jujus -- show this years jujus\n"
+                 "@" + BOT_NAME + " show salties -- show this years salties\n"
                  "@" + BOT_NAME + " show top [TOTAL] players -- show this weeks top players\n"
                  "@" + BOT_NAME + " salt [USER] -- throw salt at [USER]\n")
 
@@ -156,6 +159,30 @@ def handle_bot_scores():
         scores += '%s (%.2f) - (%.2f) %s\n' % (first_team_name, first_team_score, second_team_score, second_team_name)
 
     send_message(scores)
+
+
+# handle when response = "@[BOT_NAME] show jujus"
+# display all of this years jujus
+def handle_bot_jujus():
+    jujus = espn.get_jujus()
+
+    response = "This Year's JuJus:\n"
+    for juju in jujus:
+        response += "%s (%.2f-%.2f) - wk %d\n" % (juju["team"], juju["score"], juju["vs_score"], juju["week"])
+
+    send_message(response)
+
+
+# handle when response = "@[BOT_NAME] show salties"
+# display all of this years salties
+def handle_bot_salties():
+    salties = espn.get_salties()
+
+    response = "This Year's Salties:\n"
+    for salty in salties:
+        response += "%s (%.2f-%.2f) - wk %d\n" % (salty["team"], salty["score"], salty["vs_score"], salty["week"])
+
+    send_message(response)
 
 
 # handle when response = "@[BOT_NAME] show top [TOTAL] scores"
@@ -219,12 +246,6 @@ def handle_bot_top_players(total):
     response += "(*) = bench player"
 
     send_message(response)
-
-
-# handle when response = "@[BOT_NAME] show last [TOTAL] trades"
-# display last [TOTAL] trades
-def handle_bot_last_trades(limit):
-    send_message("under construction")
 
 
 # called from scheduler

@@ -52,6 +52,88 @@ def get_scores(total, descending):
     return sorted_scores[:int(total)]
 
 
+# a juju describes a week in which a fantasy football team:
+#   1) has a bottom-five score for the week
+#   2) is below the average score for that week
+#   3) wins
+def get_jujus():
+    jujus = []
+
+    for w in range(1, get_current_week()):
+        scores = []
+        winners = []
+        total_points = 0
+        for s in get_scoreboard(w, LEAGUE_YEAR):
+            if s.home_score < s.away_score:
+                winners.append({
+                    "team": s.away_team.team_name,
+                    "score": s.away_score,
+                    "vs_team": s.home_team.team_name,
+                    "vs_score": s.home_score,
+                    "week": w
+                })
+            else:
+                winners.append({
+                    "team": s.home_team.team_name,
+                    "score": s.home_score,
+                    "vs_team": s.away_team.team_name,
+                    "vs_score": s.away_score,
+                    "week": w
+                })
+            scores.append(s.home_score)
+            scores.append(s.away_score)
+            total_points += (s.home_score + s.away_score)
+        avg = total_points/len(scores)
+        bottom_scores = sorted(scores, reverse=True)[:5]
+
+        for winner in winners:
+            if winner["score"] < avg and winner["score"] <= bottom_scores[0]:
+                jujus.append(winner)
+
+    return jujus
+
+
+# a salty describes a week in which a fantasy football team:
+#   1) has a top-five score for the week
+#   2) is above the average score for the week
+#   3) loses
+def get_salties():
+    salties = []
+
+    for w in range(1, get_current_week()):
+        scores = []
+        losers = []
+        total_points = 0
+        for s in get_scoreboard(w, LEAGUE_YEAR):
+            if s.home_score > s.away_score:
+                losers.append({
+                    "team": s.away_team.team_name,
+                    "score": s.away_score,
+                    "vs_team": s.home_team.team_name,
+                    "vs_score": s.home_score,
+                    "week": w
+                })
+            else:
+                losers.append({
+                    "team": s.home_team.team_name,
+                    "score": s.home_score,
+                    "vs_team": s.away_team.team_name,
+                    "vs_score": s.away_score,
+                    "week": w
+                })
+            scores.append(s.home_score)
+            scores.append(s.away_score)
+            total_points += (s.home_score + s.away_score)
+        avg = total_points/len(scores)
+        top_scores = sorted(scores, reverse=False)[:5]
+
+        for loser in losers:
+            if loser["score"] > avg and loser["score"] >= top_scores[0]:
+                salties.append(loser)
+
+    return salties
+
+
 # get top scores of all time
 def get_top_scores_ever(total):
     scores = []
