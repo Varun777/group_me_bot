@@ -1,6 +1,7 @@
 import os
 import requests
 import time
+import ff_bot.utils as utils
 from espnff import League
 from operator import itemgetter
 
@@ -23,7 +24,6 @@ def get_final_week(year):
 # gets scores this year in order of points
 def get_scores(total, descending):
     scores = []
-    total = min(total, 25)
 
     final_week = get_current_week()
     if descending:
@@ -137,10 +137,10 @@ def get_salties():
 # get top scores of all time
 def get_top_scores_ever(total):
     scores = []
-    total = min(total, 25)
 
     # TODO: replace 2012 with calculated first league year
     for y in range(int(LEAGUE_YEAR), 2012, -1):
+        utils.out(str(y))
         for w in range(1, get_final_week(y) + 1):
             for s in get_scoreboard(w, y):
                 score_obj0 = {
@@ -149,25 +149,34 @@ def get_top_scores_ever(total):
                     "week": w,
                     "year": y
                 }
-            score_obj1 = {
-                "owner": s.away_team.owner,
-                "score": s.away_score,
-                "week": w,
-                "year": y
-            }
+                score_obj1 = {
+                    "owner": s.away_team.owner,
+                    "score": s.away_score,
+                    "week": w,
+                    "year": y
+                }
 
-            scores.append(score_obj0)
-            scores.append(score_obj1)
+                scores.append(score_obj0)
+                scores.append(score_obj1)
 
     # sort list by points, and return top [total] scores
     sorted_scores = sorted(scores, key=itemgetter('score'), reverse=True)
     return sorted_scores[:int(total)]
 
 
+# gets top scoring players in the current year
+def get_top_players_year(total):
+    players = []
+
+    for w in range(1, get_current_week() + 1):
+        players.extend(get_top_players(total, w))
+    sorted_players = sorted(players, key=itemgetter('points'), reverse=True)
+    return sorted_players[:int(total)]
+
+
 # gets top scoring players in the provided week
 def get_top_players(total, week):
     players = []
-    total = min(total, 25)
 
     for m in get_scoreboard(week, LEAGUE_YEAR):
         team_id = m.home_team.team_id
@@ -194,7 +203,8 @@ def get_top_players(total, week):
                     "position": position,
                     "points": points,
                     "team": team_name,
-                    "started": started
+                    "started": started,
+                    "week": week
                 }
                 players.append(player_obj)
 
@@ -215,7 +225,8 @@ def get_top_players(total, week):
                     "position": position,
                     "points": points,
                     "team": team_name,
-                    "started": started
+                    "started": started,
+                    "week": week
                 }
                 players.append(player_obj)
 
@@ -313,17 +324,6 @@ def get_latest_trade():
                 "time": int(time.mktime(time.strptime(t["date"], pattern)))
             }
 
-    return None
-
-
-# gets the most recent trades
-#
-# tranType = 1: Moved
-# tranType = 2: Added
-# tranType = 3: Dropped
-# tranType = 4: Traded
-# tranType = 5: Drafted
-def get_latest_trades(limit):
     return None
 
 

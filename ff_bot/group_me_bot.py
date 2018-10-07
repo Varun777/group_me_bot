@@ -47,9 +47,10 @@ def send_message(text="", image_url=None):
 #    5) response = "@[BOT_NAME] show bottom [TOTAL] scores", display bottom [TOTAL] scores for current year
 #    6) response = "@[BOT_NAME] show top [TOTAL] scores ever", display top [TOTAL] scores ever
 #    7) response = "@[BOT_NAME] show top [TOTAL] players", display top [TOTAL] players for current week
-#    8) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
-#    9) response = "@[BOT_NAME] die", kill program
-#    10) response contains "wonder", display arrested development reference
+#    8) response = "@[BOT_NAME] show top [TOTAL] players [YEAR]", display top [TOTAL] players for year
+#    9) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
+#    10) response = "@[BOT_NAME] die", kill program
+#    11) response contains "wonder", display arrested development reference
 #
 # future support:
 #    1) ?
@@ -73,7 +74,11 @@ def handle_response(user_from, group_id, text):
             kill_bot()
         elif re.match(r'^' + at_bot + ' show top \d+ players$', text):
             total = re.search(r'\d+', text).group()
-            handle_bot_top_players(total)
+            handle_bot_top_players_week(total)
+        elif re.match(r'^' + at_bot + ' show top \d+ players \d+$', text):
+            total = re.findall(r'\d+', text)[0]
+            year = re.findall(r'\d+', text)[1]
+            handle_bot_top_players_year(total, year)
         elif re.match(r'^' + at_bot + ' show top \d+ scores$', text):
             total = re.search(r'\d+', text).group()
             handle_bot_top_scores(total)
@@ -89,6 +94,8 @@ def handle_response(user_from, group_id, text):
             handle_bot_salties()
         elif str.__contains__(str.lower(text), "wonder"):
             handle_bot_wonder()
+        elif str.__contains__(str.lower(text), "same"):
+            handle_bot_same()
     except Exception as ex:
         utils.out("Exception in handle_response: " + ex.__repr__())
         return
@@ -111,6 +118,7 @@ def handle_bot_help():
                  "@" + BOT_NAME + " show jujus -- show this years jujus\n"
                  "@" + BOT_NAME + " show salties -- show this years salties\n"
                  "@" + BOT_NAME + " show top [TOTAL] players -- show this weeks top players\n"
+                 "@" + BOT_NAME + " show top [TOTAL] players [YEAR] -- show the years top players\n"
                  "@" + BOT_NAME + " salt [USER] -- throw salt at [USER]\n")
 
 
@@ -132,10 +140,16 @@ def handle_bot_salt(user_from, user_to):
         send_message(salter.throw_salt(user_to))
 
 
-# handle when response = "wonder"
+# handle when response contains "wonder"
 # display arrested development reference
 def handle_bot_wonder():
     send_message("did somebody say wonder?!")
+
+
+# handle when response contains "same"
+# display arrested development reference
+def handle_bot_same():
+    send_message("same")
 
 
 # handle when response = "@[BOT_NAME] show scores"
@@ -188,7 +202,8 @@ def handle_bot_salties():
 # handle when response = "@[BOT_NAME] show top [TOTAL] scores"
 # display top [TOTAL] scores for the current season
 def handle_bot_top_scores(total):
-    scores = espn.get_scores(int(total), True)
+    total = min(int(total), 25)
+    scores = espn.get_scores(total, True)
 
     response = "This Year's Top " + str(len(scores)) + " Scores:\n"
     for score in scores:
@@ -205,7 +220,8 @@ def handle_bot_top_scores(total):
 # handle when response = "@[BOT_NAME] show bottom [TOTAL] scores"
 # display bottom [TOTAL] scores for the current season
 def handle_bot_bottom_scores(total):
-    scores = espn.get_scores(int(total), False)
+    total = min(int(total), 25)
+    scores = espn.get_scores(total, False)
 
     response = "This Year's Worst " + str(len(scores)) + " Scores:\n"
     for score in scores:
@@ -222,7 +238,8 @@ def handle_bot_bottom_scores(total):
 # handle when response = "@[BOT_NAME] show top [TOTAL] scores ever"
 # display top [TOTAL] players for the current season
 def handle_bot_top_scores_ever(total):
-    scores = espn.get_top_scores_ever(int(total))
+    total = min(int(total), 25)
+    scores = espn.get_top_scores_ever(total)
 
     response = "Top " + str(len(scores)) + " Scores OF ALL TIME:\n"
     for score in scores:
@@ -233,12 +250,36 @@ def handle_bot_top_scores_ever(total):
 
 # handle when response = "@[BOT_NAME] show top [TOTAL] players"
 # display top [TOTAL] players for the current week
-def handle_bot_top_players(total):
-    players = espn.get_top_players(int(total), espn.get_current_week())
+def handle_bot_top_players_week(total):
+    total = min(int(total), 25)
+    players = espn.get_top_players(total, espn.get_current_week())
 
     response = "This Week's Top " + str(len(players)) + " Rostered Players:\n"
     for player in players:
         response += "%.2f - %s (%s) - %s" % (player["points"], player["name"], player["position"], player["team"])
+        if not player["started"]:
+            response += " *"
+        response += "\n"
+
+    response += "(*) = bench player"
+
+    send_message(response)
+
+
+# handle when response = "@[BOT_NAME] show top [TOTAL] players [YEAR]"
+# display top [TOTAL] players for the current week
+def handle_bot_top_players_year(total, year):
+    if int(year) != int(espn.LEAGUE_YEAR):
+        send_message("i only support " + str(espn.LEAGUE_YEAR))
+        return
+
+    total = min(int(total), 25)
+    players = espn.get_top_players_year(total)
+
+    response = str(year) + "'s Top " + str(len(players)) + " Rostered Players:\n"
+    for player in players:
+        response += "%.2f - %s (%s) - %s (%d)" % \
+                    (player["points"], player["name"], player["position"], player["team"], player["week"])
         if not player["started"]:
             response += " *"
         response += "\n"
