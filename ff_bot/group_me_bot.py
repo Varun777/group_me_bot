@@ -72,19 +72,22 @@ def handle_response(user_from, group_id, text):
             handle_bot_salt(user_from, str.split(text, "salt ", 1)[1])
         elif text == at_bot + " die":
             kill_bot()
-        elif re.match(r'^' + at_bot + ' show top \d+ players$', text):
-            total = re.search(r'\d+', text).group()
-            handle_bot_top_players_week(total)
-        elif re.match(r'^' + at_bot + ' show top \d+ players \d+$', text):
-            total = re.findall(r'\d+', text)[0]
-            year = re.findall(r'\d+', text)[1]
-            handle_bot_top_players_year(total, year)
         elif re.match(r'^' + at_bot + ' show top \d+ scores$', text):
             total = re.search(r'\d+', text).group()
             handle_bot_top_scores(total)
         elif re.match(r'^' + at_bot + ' show bottom \d+ scores$', text):
             total = re.search(r'\d+', text).group()
             handle_bot_bottom_scores(total)
+        elif re.match(r'^' + at_bot + ' show top \d+ \S+$', text):
+            total = re.search(r'\d+', text).group()
+            position = str(text).split(" ")[4]
+            handle_bot_top_players_week(total, position)
+        elif re.match(r'^' + at_bot + ' show top \d+ \S+ \d+$', text):
+            total = re.findall(r'\d+', text)[0]
+            year = re.findall(r'\d+', text)[1]
+            position = str(text).split(" ")[4]
+            handle_bot_top_players_year(total, position, year)
+
         # elif re.match(r'^' + at_bot + ' show top \d+ scores ever$', text):
         #     total = re.search(r'\d+', text).group()
         #     handle_bot_top_scores_ever(total)
@@ -118,7 +121,9 @@ def handle_bot_help():
                  "@" + BOT_NAME + " show jujus -- show this years jujus\n"
                  "@" + BOT_NAME + " show salties -- show this years salties\n"
                  "@" + BOT_NAME + " show top [TOTAL] players -- show this weeks top players\n"
+                 "@" + BOT_NAME + " show top [TOTAL] [POSITION] -- show this weeks top players\n"                 
                  "@" + BOT_NAME + " show top [TOTAL] players [YEAR] -- show the years top players\n"
+                 "@" + BOT_NAME + " show top [TOTAL] [POSITION] [YEAR] -- show the years top players\n"                                  
                  "@" + BOT_NAME + " salt [USER] -- throw salt at [USER]\n")
 
 
@@ -248,13 +253,14 @@ def handle_bot_top_scores_ever(total):
     send_message(response)
 
 
-# handle when response = "@[BOT_NAME] show top [TOTAL] players"
+# handle when response = "@[BOT_NAME] show top [TOTAL] [POSITION]"
 # display top [TOTAL] players for the current week
-def handle_bot_top_players_week(total):
+def handle_bot_top_players_week(total, position):
     total = min(int(total), 25)
-    players = espn.get_top_players(total, espn.get_current_week())
+    position_option = None if position.__eq__("players") else position
+    players = espn.get_top_players(total, position_option, espn.get_current_week())
 
-    response = "This Week's Top " + str(len(players)) + " Rostered Players:\n"
+    response = "This Week's Top " + str(len(players)) + " Rostered " + position.capitalize() + ":\n"
     for player in players:
         response += "%.2f - %s (%s) - %s" % (player["points"], player["name"], player["position"], player["team"])
         if not player["started"]:
@@ -266,17 +272,18 @@ def handle_bot_top_players_week(total):
     send_message(response)
 
 
-# handle when response = "@[BOT_NAME] show top [TOTAL] players [YEAR]"
+# handle when response = "@[BOT_NAME] show top [TOTAL] [POSITION] [YEAR]"
 # display top [TOTAL] players for the current week
-def handle_bot_top_players_year(total, year):
+def handle_bot_top_players_year(total, position, year):
     if int(year) != int(espn.LEAGUE_YEAR):
         send_message("i only support " + str(espn.LEAGUE_YEAR))
         return
 
     total = min(int(total), 25)
-    players = espn.get_top_players_year(total)
+    position_option = None if position.__eq__("players") else position
+    players = espn.get_top_players_year(total, position_option)
 
-    response = str(year) + "'s Top " + str(len(players)) + " Rostered Players:\n"
+    response = str(year) + "'s Top " + str(len(players)) + " Rostered " + position.capitalize() + ":\n"
     for player in players:
         response += "%.2f - %s (%s) - %s (%d)" % \
                     (player["points"], player["name"], player["position"], player["team"], player["week"])

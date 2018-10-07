@@ -165,18 +165,22 @@ def get_top_scores_ever(total):
 
 
 # gets top scoring players in the current year
-def get_top_players_year(total):
+def get_top_players_year(total, position):
     players = []
+    if position is not None and str(position).upper() not in ["QB", "WR", "RB", "TE", "K", "D", "FLEX"]:
+        return []
 
     for w in range(1, get_current_week() + 1):
-        players.extend(get_top_players(total, w))
+        players.extend(get_top_players(total, position, w))
     sorted_players = sorted(players, key=itemgetter('points'), reverse=True)
     return sorted_players[:int(total)]
 
 
 # gets top scoring players in the provided week
-def get_top_players(total, week):
+def get_top_players(total, position, week):
     players = []
+    if position is not None and str(position).upper() not in ["QB", "WR", "RB", "TE", "K", "D", "FLEX"]:
+        return []
 
     for m in get_scoreboard(week, LEAGUE_YEAR):
         team_id = m.home_team.team_id
@@ -190,7 +194,7 @@ def get_top_players(total, week):
         for slot in team0["slots"]:
             if "player" in slot:
                 name = slot["player"]["firstName"] + " " + slot["player"]["lastName"]
-                position = get_position(slot["player"]["defaultPositionId"])
+                pos = get_position(slot["player"]["defaultPositionId"])
                 team_name = team0["team"]["teamAbbrev"]
                 started = not slot["slotCategoryId"] == 20
                 if "appliedStatTotal" in slot["currentPeriodRealStats"]:
@@ -198,21 +202,24 @@ def get_top_players(total, week):
                 else:
                     points = 0
 
-                player_obj = {
-                    "name": name,
-                    "position": position,
-                    "points": points,
-                    "team": team_name,
-                    "started": started,
-                    "week": week
-                }
-                players.append(player_obj)
+                if(position is None or str(position).upper().__eq__(pos) or
+                        (str(position).upper().__eq__("FLEX") and
+                         str(pos).upper() in ["WR", "RB", "TE"])):
+                    player_obj = {
+                        "name": name,
+                        "position": pos,
+                        "points": points,
+                        "team": team_name,
+                        "started": started,
+                        "week": week
+                    }
+                    players.append(player_obj)
 
         # add players from team1 to players list
         for slot in team1["slots"]:
             if "player" in slot:
                 name = slot["player"]["firstName"] + " " + slot["player"]["lastName"]
-                position = get_position(slot["player"]["defaultPositionId"])
+                pos = get_position(slot["player"]["defaultPositionId"])
                 team_name = team1["team"]["teamAbbrev"]
                 started = not slot["slotCategoryId"] == 20
                 if "appliedStatTotal" in slot["currentPeriodRealStats"]:
@@ -220,15 +227,18 @@ def get_top_players(total, week):
                 else:
                     points = 0
 
-                player_obj = {
-                    "name": name,
-                    "position": position,
-                    "points": points,
-                    "team": team_name,
-                    "started": started,
-                    "week": week
-                }
-                players.append(player_obj)
+                if(position is None or str(position).upper().__eq__(pos) or
+                        (str(position).upper().__eq__("FLEX") and
+                         str(pos).upper() in ["WR", "RB", "TE"])):
+                    player_obj = {
+                        "name": name,
+                        "position": pos,
+                        "points": points,
+                        "team": team_name,
+                        "started": started,
+                        "week": week
+                    }
+                    players.append(player_obj)
 
     # sort list by points, and return top [total] players
     sorted_players = sorted(players, key=itemgetter('points'), reverse=True)
