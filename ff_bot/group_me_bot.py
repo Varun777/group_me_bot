@@ -87,10 +87,9 @@ def handle_response(user_from, group_id, text):
             year = re.findall(r'\d+', text)[1]
             position = str(text).split(" ")[4]
             handle_bot_top_players_year(total, position, year)
-
-        # elif re.match(r'^' + at_bot + ' show top \d+ scores ever$', text):
-        #     total = re.search(r'\d+', text).group()
-        #     handle_bot_top_scores_ever(total)
+        elif re.match(r'^' + at_bot + ' show top \d+ scores ever$', text):
+            total = re.search(r'\d+', text).group()
+            handle_bot_top_scores_ever(total)
         elif re.match(r'^' + at_bot + ' show jujus$', text):
             handle_bot_jujus()
         elif re.match(r'^' + at_bot + ' show salties$', text):
@@ -246,7 +245,7 @@ def handle_bot_top_scores_ever(total):
     total = min(int(total), 25)
     scores = espn.get_top_scores_ever(total)
 
-    response = "Top " + str(len(scores)) + " Scores OF ALL TIME:\n"
+    response = "Top " + str(len(scores)) + " Regular Season Scores OF ALL TIME:\n"
     for score in scores:
         response += "%.2f - %s - %d (%d)\n" % (score["score"], score["owner"], score["year"], score["week"])
 

@@ -7,6 +7,7 @@ from operator import itemgetter
 
 LEAGUE_ID = os.environ["LEAGUE_ID"]
 LEAGUE_YEAR = os.environ["LEAGUE_YEAR"]
+FIRST_LEAGUE_YEAR = os.environ["FIRST_LEAGUE_YEAR"]
 
 
 # gets the provided weeks matchups
@@ -138,26 +139,29 @@ def get_salties():
 def get_top_scores_ever(total):
     scores = []
 
-    # TODO: replace 2012 with calculated first league year
-    for y in range(int(LEAGUE_YEAR), 2012, -1):
-        utils.out(str(y))
-        for w in range(1, get_final_week(y) + 1):
-            for s in get_scoreboard(w, y):
-                score_obj0 = {
-                    "owner": s.home_team.owner,
-                    "score": s.home_score,
-                    "week": w,
-                    "year": y
-                }
-                score_obj1 = {
-                    "owner": s.away_team.owner,
-                    "score": s.away_score,
-                    "week": w,
-                    "year": y
-                }
+    for y in range(int(LEAGUE_YEAR), int(FIRST_LEAGUE_YEAR)-1, -1):
+        teams = get_team_data(y)
+        for t in teams:
+            owner = t["owners"][0]["firstName"] + " " + t["owners"][0]["lastName"]
+            team_id = t["teamId"]
+            for s in t["scheduleItems"]:
+                matchup = s["matchups"][0]
 
-                scores.append(score_obj0)
-                scores.append(score_obj1)
+                if matchup["matchupTypeId"] == 0 and s["matchupPeriodId"] <= 13:
+                    if matchup["homeTeamId"] == team_id:
+                        scores.append({
+                            "owner": owner,
+                            "score": matchup["homeTeamScores"][0],
+                            "week": s["matchupPeriodId"],
+                            "year": y
+                        })
+                    else:
+                        scores.append({
+                            "owner": owner,
+                            "score": matchup["awayTeamScores"][0],
+                            "week": s["matchupPeriodId"],
+                            "year": y
+                        })
 
     # sort list by points, and return top [total] scores
     sorted_scores = sorted(scores, key=itemgetter('score'), reverse=True)
@@ -277,6 +281,22 @@ def get_team(team_id):
             }
 
     return None
+
+
+# get team data in json form for the provided year
+def get_team_data(year):
+    cookies = {
+        'espn_s2': 'AEA4zGWW742Nu%2Bukdo3xanjijf5TxJkGbhoCjBLqoJopF6MC9rlfzkcR3jbQdabP6ADwwwZwEE7XIHkJ'
+                   '8Tv0q1S7TNxcKHW0goamY4xhnvQGSFBsFXy9Y%2FMyHGr%2BeRrzCkza%2FtRNv60QjusWqHDUQpugB8lWr'
+                   'canlDXl0zpDoXRBd2mEUQIab4dzUpwBZuImi%2FqoEerLkibucZ60okobcxL6jXtdBI%2BX%2BzSw%2BvDn'
+                   'gwxbwDR6SKFiTgK7f1fy%2F%2B4nlf%2BddtFPlg02cVVdI8leQ7nL',
+        'SWID': '{B703DBC7-66F7-45F2-9E1F-6C0F474E7BDD}'
+    }
+
+    r = requests.get("http://games.espn.com/ffl/api/v2/teams",
+                     params={"leagueId": LEAGUE_ID, "seasonId": year},
+                     cookies=cookies)
+    return r.json()["teams"]
 
 
 # gets the most recent transaction with transactionLogItemtypeId equal to tran_id
