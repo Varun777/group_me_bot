@@ -46,14 +46,13 @@ def send_message(text="", image_url=None):
 #    4) response = "@[BOT_NAME] show top [TOTAL] scores", display top [TOTAL] scores for current year
 #    5) response = "@[BOT_NAME] show bottom [TOTAL] scores", display bottom [TOTAL] scores for current year
 #    6) response = "@[BOT_NAME] show top [TOTAL] scores ever", display top [TOTAL] scores ever
-#    7) response = "@[BOT_NAME] show top [TOTAL] players", display top [TOTAL] players for current week
-#    8) response = "@[BOT_NAME] show top [TOTAL] players [YEAR]", display top [TOTAL] players for year
-#    9) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
-#    10) response = "@[BOT_NAME] die", kill program
-#    11) response contains "wonder", display arrested development reference
-#
-# future support:
-#    1) ?
+#    7) response = "@[BOT_NAME] show bottom [TOTAL] scores ever", display bottom [TOTAL] scores ever
+#    8) response = "@[BOT_NAME] show top [TOTAL] players", display top [TOTAL] players for current week
+#    9) response = "@[BOT_NAME] show top [TOTAL] players [YEAR]", display top [TOTAL] players for year
+#    10) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
+#    11) response = "@[BOT_NAME] die", kill program
+#    12) response contains "wonder", display arrested development reference
+
 def handle_response(user_from, group_id, text):
     # get the text from response. if exception, simply return
     try:
@@ -78,6 +77,12 @@ def handle_response(user_from, group_id, text):
         elif re.match(r'^' + at_bot + ' show bottom \d+ scores$', text):
             total = re.search(r'\d+', text).group()
             handle_bot_bottom_scores(total)
+        elif re.match(r'^' + at_bot + ' show top \d+ scores ever$', text):
+            total = re.search(r'\d+', text).group()
+            handle_bot_top_scores_ever(total)
+        elif re.match(r'^' + at_bot + ' show bottom \d+ scores ever$', text):
+            total = re.search(r'\d+', text).group()
+            handle_bot_bottom_scores_ever(total)
         elif re.match(r'^' + at_bot + ' show top \d+ \S+$', text):
             total = re.search(r'\d+', text).group()
             position = str(text).split(" ")[4]
@@ -87,9 +92,6 @@ def handle_response(user_from, group_id, text):
             year = re.findall(r'\d+', text)[1]
             position = str(text).split(" ")[4]
             handle_bot_top_players_year(total, position, year)
-        elif re.match(r'^' + at_bot + ' show top \d+ scores ever$', text):
-            total = re.search(r'\d+', text).group()
-            handle_bot_top_scores_ever(total)
         elif re.match(r'^' + at_bot + ' show jujus$', text):
             handle_bot_jujus()
         elif re.match(r'^' + at_bot + ' show salties$', text):
@@ -116,7 +118,9 @@ def handle_bot_help():
                  "@" + BOT_NAME + " help -- show list of commands\n" +
                  "@" + BOT_NAME + " show scores -- show this weeks scores\n"
                  "@" + BOT_NAME + " show top [TOTAL] scores -- show this years top scores\n"
+                 "@" + BOT_NAME + " show top [TOTAL] scores ever -- show top scores of all time\n"
                  "@" + BOT_NAME + " show bottom [TOTAL] scores -- show this years bottom scores\n"
+                 "@" + BOT_NAME + " show bottom [TOTAL] scores ever -- show this years bottom scores of all time\n"                                  
                  "@" + BOT_NAME + " show jujus -- show this years jujus\n"
                  "@" + BOT_NAME + " show salties -- show this years salties\n"
                  "@" + BOT_NAME + " show top [TOTAL] players -- show this weeks top players\n"
@@ -240,12 +244,25 @@ def handle_bot_bottom_scores(total):
 
 
 # handle when response = "@[BOT_NAME] show top [TOTAL] scores ever"
-# display top [TOTAL] players for the current season
+# display top [TOTAL] players ever
 def handle_bot_top_scores_ever(total):
     total = min(int(total), 25)
-    scores = espn.get_top_scores_ever(total)
+    scores = espn.get_all_scores_ever(total, True)
 
     response = "Top " + str(len(scores)) + " Regular Season Scores OF ALL TIME:\n"
+    for score in scores:
+        response += "%.2f - %s - %d (%d)\n" % (score["score"], score["owner"], score["year"], score["week"])
+
+    send_message(response)
+
+
+# handle when response = "@[BOT_NAME] show bottom [TOTAL] scores ever"
+# display bottom [TOTAL] players ever
+def handle_bot_bottom_scores_ever(total):
+    total = min(int(total), 25)
+    scores = espn.get_all_scores_ever(total, False)
+
+    response = "Worst " + str(len(scores)) + " Regular Season Scores OF ALL TIME:\n"
     for score in scores:
         response += "%.2f - %s - %d (%d)\n" % (score["score"], score["owner"], score["year"], score["week"])
 

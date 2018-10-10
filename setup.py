@@ -8,7 +8,7 @@ setup(
     description='Interactive GroupMe Chat Bot',
     author='Nick Collins',
     author_email='nickcollins24@gmail.com',
-    install_requires=['requests>=2.0.0,<3.0.0', 'websockets==6.0', 'espnff==1.3.1', 'apscheduler>3.0.0'],
+    install_requires=['requests>=2.0.0,<3.0.0', 'websockets==6.0', 'espnff==1.3.1', 'apscheduler>3.3.0'],
     test_suite='nose.collector',
     tests_require=['nose', 'requests_mock'],
     url='https://github.com/nickcollins24/group_me_bot',

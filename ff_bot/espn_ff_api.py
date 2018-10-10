@@ -136,10 +136,20 @@ def get_salties():
 
 
 # get top scores of all time
-def get_top_scores_ever(total):
+def get_all_scores_ever(total, descending):
     scores = []
 
     for y in range(int(LEAGUE_YEAR), int(FIRST_LEAGUE_YEAR)-1, -1):
+        if y == int(LEAGUE_YEAR):
+            # descending (top scores), count current week
+            if descending:
+                final_week = get_current_week()
+            # ascending (low scores), dont count current week
+            else:
+                final_week = get_current_week()-1
+        else:
+            final_week = 13
+
         teams = get_team_data(y)
         for t in teams:
             owner = t["owners"][0]["firstName"] + " " + t["owners"][0]["lastName"]
@@ -147,7 +157,7 @@ def get_top_scores_ever(total):
             for s in t["scheduleItems"]:
                 matchup = s["matchups"][0]
 
-                if matchup["matchupTypeId"] == 0 and s["matchupPeriodId"] <= 13:
+                if matchup["matchupTypeId"] == 0 and s["matchupPeriodId"] <= final_week:
                     if matchup["homeTeamId"] == team_id:
                         scores.append({
                             "owner": owner,
@@ -164,7 +174,7 @@ def get_top_scores_ever(total):
                         })
 
     # sort list by points, and return top [total] scores
-    sorted_scores = sorted(scores, key=itemgetter('score'), reverse=True)
+    sorted_scores = sorted(scores, key=itemgetter('score'), reverse=descending)
     return sorted_scores[:int(total)]
 
 
