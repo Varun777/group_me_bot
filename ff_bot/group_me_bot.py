@@ -43,15 +43,16 @@ def send_message(text="", image_url=None):
 #    1) response = "@[BOT_NAME]", display greeting
 #    2) response = "@[BOT_NAME] help", display list of commands
 #    3) response = "@[BOT_NAME] show scores", display scores for current week
-#    4) response = "@[BOT_NAME] show top [TOTAL] scores", display top [TOTAL] scores for current year
-#    5) response = "@[BOT_NAME] show bottom [TOTAL] scores", display bottom [TOTAL] scores for current year
-#    6) response = "@[BOT_NAME] show top [TOTAL] scores ever", display top [TOTAL] scores ever
-#    7) response = "@[BOT_NAME] show bottom [TOTAL] scores ever", display bottom [TOTAL] scores ever
-#    8) response = "@[BOT_NAME] show top [TOTAL] players", display top [TOTAL] players for current week
-#    9) response = "@[BOT_NAME] show top [TOTAL] players [YEAR]", display top [TOTAL] players for year
-#    10) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
-#    11) response = "@[BOT_NAME] die", kill program
-#    12) response contains "wonder", display arrested development reference
+#    4) response = "@[BOT_NAME] show standings ever", display standings for all owners ever
+#    5) response = "@[BOT_NAME] show top [TOTAL] scores", display top [TOTAL] scores for current year
+#    6) response = "@[BOT_NAME] show bottom [TOTAL] scores", display bottom [TOTAL] scores for current year
+#    7) response = "@[BOT_NAME] show top [TOTAL] scores ever", display top [TOTAL] scores ever
+#    8) response = "@[BOT_NAME] show bottom [TOTAL] scores ever", display bottom [TOTAL] scores ever
+#    9) response = "@[BOT_NAME] show top [TOTAL] players", display top [TOTAL] players for current week
+#    10) response = "@[BOT_NAME] show top [TOTAL] players [YEAR]", display top [TOTAL] players for year
+#    11) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
+#    12) response = "@[BOT_NAME] die", kill program
+#    13) response contains "wonder", display arrested development reference
 
 def handle_response(user_from, group_id, text):
     # get the text from response. if exception, simply return
@@ -71,6 +72,8 @@ def handle_response(user_from, group_id, text):
             handle_bot_salt(user_from, str.split(text, "salt ", 1)[1])
         elif text == at_bot + " die":
             kill_bot()
+        elif text == at_bot + " show standings ever":
+            handle_bot_standings_ever()
         elif re.match(r'^' + at_bot + ' show top \d+ scores$', text):
             total = re.search(r'\d+', text).group()
             handle_bot_top_scores(total)
@@ -117,6 +120,7 @@ def handle_bot_help():
     send_message("commands:\n" +
                  "@" + BOT_NAME + " help -- show list of commands\n" +
                  "@" + BOT_NAME + " show scores -- show this weeks scores\n"
+                 "@" + BOT_NAME + " show standings ever -- show all time standings\n"                 
                  "@" + BOT_NAME + " show top [TOTAL] scores -- show this years top scores\n"
                  "@" + BOT_NAME + " show top [TOTAL] scores ever -- show top scores of all time\n"
                  "@" + BOT_NAME + " show bottom [TOTAL] scores -- show this years bottom scores\n"
@@ -158,6 +162,23 @@ def handle_bot_wonder():
 # display arrested development reference
 def handle_bot_same():
     send_message("same")
+
+
+# handle when response = "@[BOT_NAME] show standings ever
+# display all-time standings
+def handle_bot_standings_ever():
+    standings = espn.get_standings_ever()
+
+    response = "All-Time Regular Season Standings:\n"
+    for standing in standings:
+        if standing["ties"] > 0:
+            ties = "-" + str(standing["ties"])
+        else:
+            ties = ""
+
+        response += "%d-%d%s (%.3f) - %s\n" % (standing["wins"], standing["losses"], ties, standing["percentage"], standing["owner"])
+
+    send_message(response)
 
 
 # handle when response = "@[BOT_NAME] show scores"

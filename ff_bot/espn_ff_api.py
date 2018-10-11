@@ -22,6 +22,37 @@ def get_final_week(year):
     return league.settings.reg_season_count
 
 
+# get all-time standings
+def get_standings_ever():
+    standings = []
+    team_dict = {}
+
+    for y in range(int(LEAGUE_YEAR), int(FIRST_LEAGUE_YEAR)-1, -1):
+        s = get_standings_data(y)
+        for t in s:
+            owner_id = t["owners"][0]["ownerId"]
+
+            if owner_id in team_dict:
+                team_dict[owner_id]["wins"] += t["record"]["overallWins"]
+                team_dict[owner_id]["losses"] += t["record"]["overallLosses"]
+                team_dict[owner_id]["ties"] += t["record"]["overallTies"]
+            else:
+                team_dict[owner_id] = {
+                    "wins": t["record"]["overallWins"],
+                    "losses": t["record"]["overallLosses"],
+                    "ties": t["record"]["overallTies"],
+                    "owner": t["owners"][0]["firstName"] + " " + t["owners"][0]["lastName"]
+                }
+
+    for t in team_dict:
+        team_dict[t]["percentage"] = \
+            float(team_dict[t]["wins"]/(team_dict[t]["losses"] + team_dict[t]["wins"] + team_dict[t]["ties"]))
+        standings.append(team_dict[t])
+
+    sorted_standings = sorted(standings, key=itemgetter('percentage'), reverse=True)
+    return sorted_standings
+
+
 # gets scores this year in order of points
 def get_scores(total, descending):
     scores = []
@@ -291,6 +322,22 @@ def get_team(team_id):
             }
 
     return None
+
+
+# get standings data in json form for the provided year
+def get_standings_data(year):
+    cookies = {
+        'espn_s2': 'AEA4zGWW742Nu%2Bukdo3xanjijf5TxJkGbhoCjBLqoJopF6MC9rlfzkcR3jbQdabP6ADwwwZwEE7XIHkJ'
+                   '8Tv0q1S7TNxcKHW0goamY4xhnvQGSFBsFXy9Y%2FMyHGr%2BeRrzCkza%2FtRNv60QjusWqHDUQpugB8lWr'
+                   'canlDXl0zpDoXRBd2mEUQIab4dzUpwBZuImi%2FqoEerLkibucZ60okobcxL6jXtdBI%2BX%2BzSw%2BvDn'
+                   'gwxbwDR6SKFiTgK7f1fy%2F%2B4nlf%2BddtFPlg02cVVdI8leQ7nL',
+        'SWID': '{B703DBC7-66F7-45F2-9E1F-6C0F474E7BDD}'
+    }
+
+    r = requests.get("http://games.espn.com/ffl/api/v2/standings",
+                     params={"leagueId": LEAGUE_ID, "seasonId": year},
+                     cookies=cookies)
+    return r.json()["teams"]
 
 
 # get team data in json form for the provided year
