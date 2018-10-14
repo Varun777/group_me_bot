@@ -86,10 +86,22 @@ def handle_response(user_from, group_id, text):
         elif re.match(r'^' + at_bot + ' show bottom \d+ scores ever$', text):
             total = re.search(r'\d+', text).group()
             handle_bot_bottom_scores_ever(total)
+        elif re.match(r'^' + at_bot + ' show top \d+ pf through \d+$', text):
+            total = re.findall(r'\d+', text)[0]
+            week = re.findall(r'\d+', text)[1]
+            handle_bot_top_pf(total, week)
+        elif re.match(r'^' + at_bot + ' show bottom \d+ pf through \d+$', text):
+            total = re.findall(r'\d+', text)[0]
+            week = re.findall(r'\d+', text)[1]
+            handle_bot_bottom_pf(total, week)
         elif re.match(r'^' + at_bot + ' show top \d+ \S+$', text):
             total = re.search(r'\d+', text).group()
             position = str(text).split(" ")[4]
             handle_bot_top_players_week(total, position)
+        # elif re.match(r'^' + at_bot + ' show top \d+ \S+ ever$', text):
+        #     total = re.findall(r'\d+', text)[0]
+        #     position = str(text).split(" ")[4]
+        #     handle_bot_top_players_ever(total, position)
         elif re.match(r'^' + at_bot + ' show top \d+ \S+ \d+$', text):
             total = re.findall(r'\d+', text)[0]
             year = re.findall(r'\d+', text)[1]
@@ -123,6 +135,8 @@ def handle_bot_help():
                  "@" + BOT_NAME + " show standings ever -- show all time standings\n"                 
                  "@" + BOT_NAME + " show top [TOTAL] scores -- show this years top scores\n"
                  "@" + BOT_NAME + " show top [TOTAL] scores ever -- show top scores of all time\n"
+                 "@" + BOT_NAME + " show top [TOTAL] pf through [WEEK] -- show most points through specified week\n"
+                 "@" + BOT_NAME + " show bottom [TOTAL] pf through [WEEK] -- show least points through specified week\n"
                  "@" + BOT_NAME + " show bottom [TOTAL] scores -- show this years bottom scores\n"
                  "@" + BOT_NAME + " show bottom [TOTAL] scores ever -- show this years bottom scores of all time\n"                                  
                  "@" + BOT_NAME + " show jujus -- show this years jujus\n"
@@ -164,7 +178,29 @@ def handle_bot_same():
     send_message("same")
 
 
-# handle when response = "@[BOT_NAME] show standings ever
+# handle when response = "@[BOT_NAME] show top [TOTAL] points through [WEEK]"
+# display most points through a specified number of weeks
+def handle_bot_top_pf(total, week):
+    total = min(int(total), 20)
+    points = espn.get_pf_through(total, int(week), True)
+    response = "Most Points through " + week + " Weeks:\n"
+    for p in points:
+        response += "%.2f (%.2f/g) - %s - %d\n" % (p["points"], p["points"]/int(week), p["owner"], p["year"])
+    send_message(response)
+
+
+# handle when response = "@[BOT_NAME] show bottom [TOTAL] points through [WEEK]"
+# display most points through a specified number of weeks
+def handle_bot_bottom_pf(total, week):
+    total = min(int(total), 20)
+    points = espn.get_pf_through(total, int(week), False)
+    response = "Least Points through " + week + " Weeks:\n"
+    for p in points:
+        response += "%.2f (%.2f/g) - %s - %d\n" % (p["points"], p["points"]/int(week), p["owner"], p["year"])
+    send_message(response)
+
+
+# handle when response = "@[BOT_NAME] show standings ever"
 # display all-time standings
 def handle_bot_standings_ever():
     standings = espn.get_standings_ever()
@@ -295,7 +331,7 @@ def handle_bot_bottom_scores_ever(total):
 def handle_bot_top_players_week(total, position):
     total = min(int(total), 25)
     position_option = None if position.__eq__("players") else position
-    players = espn.get_top_players(total, position_option, espn.get_current_week())
+    players = espn.get_players_week(total, position_option, espn.get_current_week(), espn.LEAGUE_YEAR, True)
 
     response = "This Week's Top " + str(len(players)) + " Rostered " + position.capitalize() + ":\n"
     for player in players:
@@ -318,7 +354,7 @@ def handle_bot_top_players_year(total, position, year):
 
     total = min(int(total), 25)
     position_option = None if position.__eq__("players") else position
-    players = espn.get_top_players_year(total, position_option)
+    players = espn.get_players_year(total, position_option, int(year), True)
 
     response = str(year) + "'s Top " + str(len(players)) + " Rostered " + position.capitalize() + ":\n"
     for player in players:
@@ -331,6 +367,26 @@ def handle_bot_top_players_year(total, position, year):
     response += "(*) = bench player"
 
     send_message(response)
+
+
+# handle when response = "@[BOT_NAME] show top [TOTAL] [POSITION] ever"
+# display top [TOTAL] rostered players of all time
+# def handle_bot_top_players_ever(total, position):
+#     total = min(int(total), 25)
+#     position_option = None if position.__eq__("players") else position
+#     players = espn.get_players_ever(total, position_option, True)
+#
+#     response = "Top " + str(len(players)) + " Rostered " + position.capitalize() + " OF ALL TIME:\n"
+#     for player in players:
+#         response += "%.2f - %s (%s) - %s - %d(%d)" % \
+#                     (player["points"], player["name"], player["position"], player["owner"], player["year"], player["week"])
+#         if not player["started"]:
+#             response += " *"
+#         response += "\n"
+#
+#     response += "(*) = bench player"
+#
+#     send_message(response)
 
 
 # called from scheduler

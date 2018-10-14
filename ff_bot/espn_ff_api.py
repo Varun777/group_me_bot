@@ -8,18 +8,45 @@ from operator import itemgetter
 LEAGUE_ID = os.environ["LEAGUE_ID"]
 LEAGUE_YEAR = os.environ["LEAGUE_YEAR"]
 FIRST_LEAGUE_YEAR = os.environ["FIRST_LEAGUE_YEAR"]
+LEAGUE = League(LEAGUE_ID, LEAGUE_YEAR)
 
 
-# gets the provided weeks matchups
+# gets the provided weeks matchups during provided year
 def get_scoreboard(week, year):
     league = League(LEAGUE_ID, year)
     return league.scoreboard(week)
 
 
-# get final week of the regular season for provided year
-def get_final_week(year):
-    league = League(LEAGUE_ID, year)
-    return league.settings.reg_season_count
+# gets the provided weeks matchups during current year
+def get_scoreboard_current_year(week):
+    return LEAGUE.scoreboard(week)
+
+
+# get most/least PointsFor through the provided week, in league history
+def get_pf_through(total, week, descending):
+    points = []
+    week = min(max(0, week), 13)
+    current_week = get_current_week()
+    for y in range(int(LEAGUE_YEAR), int(FIRST_LEAGUE_YEAR)-1, -1):
+        if descending or y < int(LEAGUE_YEAR) or week < current_week:
+            s = get_team_data(y)
+            for t in s:
+                p = 0
+                team_id = t["teamId"]
+                for w in range(0, week):
+                    if t["scheduleItems"][w]["matchups"][0]["homeTeamId"] == team_id:
+                        p += t["scheduleItems"][w]["matchups"][0]["homeTeamScores"][0]
+                    else:
+                        p += t["scheduleItems"][w]["matchups"][0]["awayTeamScores"][0]
+                points.append({
+                    "points": p,
+                    "owner": t["owners"][0]["firstName"] + " " + t["owners"][0]["lastName"],
+                    "week": week,
+                    "year": y
+                })
+
+    sorted_points = sorted(points, key=itemgetter('points'), reverse=descending)
+    return sorted_points[:int(total)]
 
 
 # get all-time standings
@@ -62,7 +89,7 @@ def get_scores(total, descending):
         final_week = final_week + 1
 
     for w in range(1, final_week):
-        for s in get_scoreboard(w, LEAGUE_YEAR):
+        for s in get_scoreboard_current_year(w):
             score_obj0 = {
                 "team": s.home_team.team_name,
                 "score": s.home_score,
@@ -95,7 +122,7 @@ def get_jujus():
         scores = []
         winners = []
         total_points = 0
-        for s in get_scoreboard(w, LEAGUE_YEAR):
+        for s in get_scoreboard_current_year(w):
             if s.home_score < s.away_score:
                 winners.append({
                     "team": s.away_team.team_name,
@@ -136,7 +163,7 @@ def get_salties():
         scores = []
         losers = []
         total_points = 0
-        for s in get_scoreboard(w, LEAGUE_YEAR):
+        for s in get_scoreboard_current_year(w):
             if s.home_score > s.away_score:
                 losers.append({
                     "team": s.away_team.team_name,
@@ -209,31 +236,55 @@ def get_all_scores_ever(total, descending):
     return sorted_scores[:int(total)]
 
 
-# gets top scoring players in the current year
-def get_top_players_year(total, position):
+# gets top/bottom scoring rostered players ever
+# def get_players_ever(total, position, descending):
+#     players = []
+#     if position is not None and str(position).upper() not in ["QB", "WR", "RB", "TE", "K", "D", "FLEX"]:
+#         return []
+#
+#     for y in range(int(LEAGUE_YEAR), int(FIRST_LEAGUE_YEAR)-1, -1):
+#         players.extend(get_players_year(total, position, y, descending))
+#
+#     sorted_players = sorted(players, key=itemgetter('points'), reverse=descending)
+#     return sorted_players[:int(total)]
+
+
+# gets top/bottom scoring players in the provided year
+def get_players_year(total, position, year, descending):
     players = []
     if position is not None and str(position).upper() not in ["QB", "WR", "RB", "TE", "K", "D", "FLEX"]:
         return []
 
-    for w in range(1, get_current_week() + 1):
-        players.extend(get_top_players(total, position, w))
-    sorted_players = sorted(players, key=itemgetter('points'), reverse=True)
+    if year == int(LEAGUE_YEAR):
+        # descending (top scores), count current week
+        if descending:
+            final_week = get_current_week() + 1
+        # ascending (low scores), dont count current week
+        else:
+            final_week = get_current_week()
+    else:
+        final_week = 14
+
+    for w in range(1, final_week):
+        players.extend(get_players_week(total, position, w, year, descending))
+
+    sorted_players = sorted(players, key=itemgetter('points'), reverse=descending)
     return sorted_players[:int(total)]
 
 
-# gets top scoring players in the provided week
-def get_top_players(total, position, week):
+# gets top/bottom scoring players in the provided week of the provided year
+def get_players_week(total, position, week, year, descending):
     players = []
     if position is not None and str(position).upper() not in ["QB", "WR", "RB", "TE", "K", "D", "FLEX"]:
         return []
 
-    for m in get_scoreboard(week, LEAGUE_YEAR):
+    for m in get_scoreboard_current_year(week):
         team_id = m.home_team.team_id
-        r = requests.get("http://games.espn.com/ffl/api/v2/boxscore",
-                         params={"leagueId": LEAGUE_ID, "seasonId": LEAGUE_YEAR, "matchupPeriodId": week, "teamId": team_id})
+        b = get_boxscore_data(week, year, team_id)
+        utils.out("getting players " + str(year) + " " + str(week) + " " + str(team_id))
 
-        team0 = r.json()["boxscore"]["teams"][0]
-        team1 = r.json()["boxscore"]["teams"][1]
+        team0 = b["teams"][0]
+        team1 = b["teams"][1]
 
         # add players from team0 to players list
         for slot in team0["slots"]:
@@ -286,7 +337,7 @@ def get_top_players(total, position, week):
                     players.append(player_obj)
 
     # sort list by points, and return top [total] players
-    sorted_players = sorted(players, key=itemgetter('points'), reverse=True)
+    sorted_players = sorted(players, key=itemgetter('points'), reverse=descending)
     return sorted_players[:int(total)]
 
 
@@ -322,6 +373,39 @@ def get_team(team_id):
             }
 
     return None
+
+
+# get boxscore data in json form for the provided week and year
+# TODO: fix, this only works years where league was public
+def get_boxscore_data(week, year, team_id):
+    cookies = {
+        'espn_s2': 'AEA4zGWW742Nu%2Bukdo3xanjijf5TxJkGbhoCjBLqoJopF6MC9rlfzkcR3jbQdabP6ADwwwZwEE7XIHkJ'
+                   '8Tv0q1S7TNxcKHW0goamY4xhnvQGSFBsFXy9Y%2FMyHGr%2BeRrzCkza%2FtRNv60QjusWqHDUQpugB8lWr'
+                   'canlDXl0zpDoXRBd2mEUQIab4dzUpwBZuImi%2FqoEerLkibucZ60okobcxL6jXtdBI%2BX%2BzSw%2BvDn'
+                   'gwxbwDR6SKFiTgK7f1fy%2F%2B4nlf%2BddtFPlg02cVVdI8leQ7nL',
+        'SWID': '{B703DBC7-66F7-45F2-9E1F-6C0F474E7BDD}'
+    }
+
+    r = requests.get("http://games.espn.com/ffl/api/v2/boxscore",
+                     params={"leagueId": LEAGUE_ID, "seasonId": year, "matchupPeriodId": week, "teamId": team_id},
+                     cookies=cookies)
+    return r.json()["boxscore"]
+
+
+# get scoreboard data in json form for the provided week and year
+def get_scoreboard_data(week, year):
+    cookies = {
+        'espn_s2': 'AEA4zGWW742Nu%2Bukdo3xanjijf5TxJkGbhoCjBLqoJopF6MC9rlfzkcR3jbQdabP6ADwwwZwEE7XIHkJ'
+                   '8Tv0q1S7TNxcKHW0goamY4xhnvQGSFBsFXy9Y%2FMyHGr%2BeRrzCkza%2FtRNv60QjusWqHDUQpugB8lWr'
+                   'canlDXl0zpDoXRBd2mEUQIab4dzUpwBZuImi%2FqoEerLkibucZ60okobcxL6jXtdBI%2BX%2BzSw%2BvDn'
+                   'gwxbwDR6SKFiTgK7f1fy%2F%2B4nlf%2BddtFPlg02cVVdI8leQ7nL',
+        'SWID': '{B703DBC7-66F7-45F2-9E1F-6C0F474E7BDD}'
+    }
+
+    r = requests.get("http://games.espn.com/ffl/api/v2/scoreboard",
+                     params={"leagueId": LEAGUE_ID, "seasonId": year, "matchupId": week},
+                     cookies=cookies)
+    return r.json()["scoreboard"]["matchups"]
 
 
 # get standings data in json form for the provided year

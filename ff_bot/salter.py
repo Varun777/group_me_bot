@@ -13,9 +13,8 @@ def throw_salt(name):
     salt1 = name + " smells like a " + adjective0 + " " + noun0 + "."
     salt2 = name + " looks like a " + adjective0 + " " + noun0 + "."
     salt3 = "i have never seen a " + noun0 + " as " + adjective0 + " as " + name + "."
-    salt4 = name + " is the biggest " + noun0 + " that ever lived!"
-    salt5 = "you can't spell " + name + " without " + noun0 + "."
-    salt6 = "hey " + name + ", go " + verb0 + " a " + noun0 + "!"
-    salts = [salt0, salt1, salt2, salt3, salt4, salt5, salt6]
+    salt4 = name + " is such a " + noun0 + "!"
+    salt5 = "hey " + name + ", go " + verb0 + " a " + noun0 + "!"
+    salts = [salt0, salt1, salt2, salt3, salt4, salt5]
 
     return salts[random.randint(0, len(salts)-1)]
