@@ -9,6 +9,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 import ff_bot.salter as salter
 import ff_bot.utils as utils
 import ff_bot.espn_ff_api as espn
+import ff_bot.giphy_api as giphy
 import ff_bot.group_me_listener as group_listener
 
 # environment vars
@@ -51,8 +52,9 @@ def send_message(text="", image_url=None):
 #    9) response = "@[BOT_NAME] show top [TOTAL] players", display top [TOTAL] players for current week
 #    10) response = "@[BOT_NAME] show top [TOTAL] players [YEAR]", display top [TOTAL] players for year
 #    11) response = "@[BOT_NAME] salt [USER]", display random insult to [USER]
-#    12) response = "@[BOT_NAME] die", kill program
-#    13) response contains "wonder", display arrested development reference
+#    12) response = "@[BOT_NAME] gif [SEARCH_TERM]", display random gif
+#    13) response = "@[BOT_NAME] die", kill program
+#    14) response contains "wonder", display arrested development reference
 
 def handle_response(user_from, group_id, text):
     # get the text from response. if exception, simply return
@@ -70,6 +72,8 @@ def handle_response(user_from, group_id, text):
             handle_bot_scores()
         elif str.startswith(text, at_bot + " salt "):
             handle_bot_salt(user_from, str.split(text, "salt ", 1)[1])
+        elif str.startswith(text, at_bot + " gif "):
+            handle_bot_gif(str.split(text, "gif ", 1)[1])
         elif text == at_bot + " die":
             kill_bot()
         elif text == at_bot + " show standings ever":
@@ -164,6 +168,12 @@ def handle_bot_salt(user_from, user_to):
         send_message("how dare you, " + user_from + ", she's a nice lady!")
     else:
         send_message(salter.throw_salt(user_to))
+
+
+# handle when response = "@[BOT_NAME] gif [SEARCH_TERM]"
+# display random gif
+def handle_bot_gif(search_term):
+    send_message(giphy.get_random_gif(search_term))
 
 
 # handle when response contains "wonder"
@@ -410,10 +420,11 @@ def handle_trade_alert():
         players_1 = ""
 
         for p in latest_trade["players"]:
-            if p["from"] == team_1["id"]:
-                players_0 += p["name"] + " " + "(" + p["position"] + ")\n"
-            else:
-                players_1 += p["name"] + " " + "(" + p["position"] + ")\n"
+            if p["to"] > 0:
+                if p["from"] == team_1["id"]:
+                    players_0 += p["name"] + " " + "(" + p["position"] + ")\n"
+                else:
+                    players_1 += p["name"] + " " + "(" + p["position"] + ")\n"
 
         send_message(image_url="https://i.groupme.com/500x281.jpeg.87bd736636764acf86e1bd131a6f9373")
         send_message(team_0["name"] + " and " + team_1["name"] + " have agreed on a trade, "
