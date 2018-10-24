@@ -55,6 +55,7 @@ def send_message(text="", image_url=None):
 #    12) response = "@[BOT_NAME] gif [SEARCH_TERM]", display random gif
 #    13) response = "@[BOT_NAME] die", kill program
 #    14) response contains "wonder", display arrested development reference
+#    14) response contains "gattaca", display a gif of rafi from the league
 
 def handle_response(user_from, group_id, text):
     # get the text from response. if exception, simply return
@@ -118,6 +119,8 @@ def handle_response(user_from, group_id, text):
         elif str.__contains__(str.lower(text), "wonder"):
             handle_bot_wonder()
         elif str.__contains__(str.lower(text), "same"):
+            handle_bot_same()
+        elif str.__contains__(str.lower(text), "gattaca"):
             handle_bot_same()
     except Exception as ex:
         utils.out("Exception in handle_response: " + ex.__repr__())
@@ -187,6 +190,10 @@ def handle_bot_wonder():
 def handle_bot_same():
     send_message("same")
 
+# handle when response contains "same"
+# display arrested development reference
+def handle_bot_gattaca():
+    send_message(giphy.get_random_gif('rafi gattaca'))
 
 # handle when response = "@[BOT_NAME] show top [TOTAL] points through [WEEK]"
 # display most points through a specified number of weeks
