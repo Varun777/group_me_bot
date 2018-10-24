@@ -190,8 +190,8 @@ def handle_bot_wonder():
 def handle_bot_same():
     send_message("same")
 
-# handle when response contains "same"
-# display arrested development reference
+# handle when response contains "gattaca"
+# display ar gif of rafi from the league (most of the time lol)
 def handle_bot_gattaca():
     send_message(giphy.get_random_gif('rafi gattaca'))
 
