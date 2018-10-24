@@ -121,7 +121,7 @@ def handle_response(user_from, group_id, text):
         elif str.__contains__(str.lower(text), "same"):
             handle_bot_same()
         elif str.__contains__(str.lower(text), "gattaca"):
-            handle_bot_same()
+            handle_bot_gattaca()
     except Exception as ex:
         utils.out("Exception in handle_response: " + ex.__repr__())
         return
@@ -191,7 +191,7 @@ def handle_bot_same():
     send_message("same")
 
 # handle when response contains "gattaca"
-# display ar gif of rafi from the league (most of the time lol)
+# display a gif of rafi from the league (most of the time lol)
 def handle_bot_gattaca():
     send_message(giphy.get_random_gif('rafi gattaca'))
 
